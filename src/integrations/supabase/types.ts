@@ -1155,6 +1155,10 @@ export type Database = {
       can_field: { Args: never; Returns: boolean }
       can_manage: { Args: never; Returns: boolean }
       claim_first_admin: { Args: never; Returns: boolean }
+      desfazer_importacao_medicao: {
+        Args: { _importacao: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
