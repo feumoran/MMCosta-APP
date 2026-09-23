@@ -1,0 +1,24 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
+import { createOpenAI } from "@ai-sdk/openai";
+import { hasToolCall, streamText, tool } from "ai";
+import { z } from "zod";
+import type { Database } from "@/integrations/supabase/types";
+import { createGatewayFetch } from "@/lib/ai-gateway.server";
+
+const requestSchema=z.object({arquivoPath:z.string().min(1),mimeType:z.string().min(1),texto:z.string().nullable(),nomeArquivo:z.string().min(1)});
+const item=z.object({item:z.string(),data:z.string().nullable(),nf_comprovante:z.string().nullable(),descricao:z.string(),motivo:z.string().nullable(),cc_obra_texto:z.string().nullable(),valor:z.number().nonnegative()});
+const output=z.object({funcionario:z.string().nullable(),numero_caixa:z.string().nullable(),total_documento:z.number().nullable(),itens:z.array(item)});
+const fail=(status:number,error:string)=>Response.json({error},{status});
+
+export const Route=createFileRoute("/api/ler-comprovantes")({server:{handlers:{POST:async({request})=>{
+ const authorization=request.headers.get("authorization");if(!authorization?.startsWith("Bearer "))return fail(401,"Entre novamente para ler os comprovantes.");
+ const url=process.env["SUPABASE_URL"],key=process.env["SUPABASE_PUBLISHABLE_KEY"],aiKey=process.env["LOVABLE_API_KEY"];if(!url||!key||!aiKey)return fail(500,"A leitura por IA ainda não está configurada.");
+ const cloud=createClient<Database>(url,key,{global:{headers:{Authorization:authorization}},auth:{persistSession:false}});const {data:claims}=await cloud.auth.getClaims(authorization.slice(7));if(!claims?.claims?.sub)return fail(401,"Sua sessão expirou. Entre novamente.");
+ const parsed=requestSchema.safeParse(await request.json());if(!parsed.success)return fail(400,"Arquivo inválido.");
+ const {data:isAdmin}=await cloud.rpc("has_role",{_user_id:String(claims.claims.sub),_role:"admin"});const {data:isOffice}=await cloud.rpc("has_role",{_user_id:String(claims.claims.sub),_role:"escritorio"});if(!isAdmin&&!isOffice)return fail(403,"Apenas o escritório pode ler comprovantes.");
+ const p=parsed.data;let media:{type:"file";data:string;mediaType:"application/pdf";filename:string}|{type:"image";image:string}|null=null;
+ if(!p.texto?.trim()){const {data:file,error}=await cloud.storage.from("comprovantes").download(p.arquivoPath);if(error||!file)return fail(404,"Não foi possível abrir o arquivo original.");const bytes=new Uint8Array(await file.arrayBuffer());let binary="";for(let n=0;n<bytes.length;n+=8192)binary+=String.fromCharCode(...bytes.subarray(n,n+8192));const base64=btoa(binary);media=p.mimeType==="application/pdf"?{type:"file",data:base64,mediaType:"application/pdf",filename:p.nomeArquivo}:{type:"image",image:`data:${p.mimeType};base64,${base64}`};}
+ const run=createGatewayFetch(request.headers.get("X-Lovable-AIG-Run-ID")??undefined);const lovable=createOpenAI({baseURL:"https://ai.gateway.lovable.dev/v1",apiKey:aiKey,headers:{"Lovable-API-Key":aiKey,"X-Lovable-AIG-SDK":"vercel-ai-sdk"},fetch:run.fetch});
+ try{const result=streamText({model:lovable.responses("openai/gpt-6-astra"),maxRetries:0,system:"Extraia uma prestação de contas brasileira sem inventar dados. Interprete vírgula como decimal. Preserve descrição, motivo e texto original de centro de custo separadamente. Uma linha por comprovante. Datas em aaaa-mm-dd quando legíveis. Chame registrar_comprovantes exatamente uma vez.",messages:[{role:"user",content:[{type:"text",text:p.texto?.trim()?`Texto extraído do PDF:\n${p.texto}`:"Extraia todos os comprovantes do arquivo anexado."},...(media?[media]:[])]}],tools:{registrar_comprovantes:tool({description:"Registra a extração estruturada da prestação de contas.",inputSchema:output})},toolChoice:{type:"tool",toolName:"registrar_comprovantes"},stopWhen:hasToolCall("registrar_comprovantes"),providerOptions:{openai:{forceReasoning:true,reasoningEffort:"low",reasoningSummary:"auto",store:false,include:["reasoning.encrypted_content"]}}});const raw=(await result.toolCalls).find(c=>c.toolName==="registrar_comprovantes")?.input;const checked=output.safeParse(raw);if(!checked.success)return fail(422,"A leitura terminou, mas alguns campos precisam ser preenchidos manualmente.");return Response.json({extracao:checked.data,runId:run.getRunId()});}catch(error){const status=typeof error==="object"&&error&&"statusCode" in error?Number(error.statusCode):500;if(status===429)return fail(429,"Muitas leituras ao mesmo tempo. Aguarde um pouco e tente novamente.");if(status===402)return fail(402,"Os créditos de IA acabaram. Preencha os comprovantes manualmente.");return fail(status>=400&&status<600?status:500,error instanceof Error?error.message:"Não foi possível ler os comprovantes.");}
+}}}});
