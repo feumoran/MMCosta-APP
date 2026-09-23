@@ -16,4 +16,5 @@
 - [ ] Painel da obra com indicadores, progresso, curva S e fluxo de caixa completo
 - [ ] Visão geral consolidada por obra ativa
 - [ ] Verificação de cálculos, acessos, telas e segurança
+- [ ] Aplicar o logo enviado e sua paleta verde-grafite à identidade do sistema e ao ícone do navegador
 

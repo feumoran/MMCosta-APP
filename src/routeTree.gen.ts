@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
 import { Route as ApiLerBoletimRouteImport } from './routes/api/ler-boletim'
+import { Route as ApiLerComprovantesRouteImport } from './routes/api/ler-comprovantes'
 import { Route as AuthenticatedObrasIdSecaoRouteImport } from './routes/_authenticated/obras/$id/$secao'
 import { Route as AuthenticatedObrasIdPainelRouteImport } from './routes/_authenticated/obras/$id/painel'
 
@@ -47,6 +48,11 @@ const ApiLerBoletimRoute = ApiLerBoletimRouteImport.update({
   path: '/api/ler-boletim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLerComprovantesRoute = ApiLerComprovantesRouteImport.update({
+  id: '/api/ler-comprovantes',
+  path: '/api/ler-comprovantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedObrasIdSecaoRoute =
   AuthenticatedObrasIdSecaoRouteImport.update({
     id: '/obras/$id/$secao',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
+  '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
+  '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
+  '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/_authenticated/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/_authenticated/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/visao-geral'
     | '/api/ler-boletim'
+    | '/api/ler-comprovantes'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   fileRoutesByTo: FileRoutesByTo
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/visao-geral'
     | '/api/ler-boletim'
+    | '/api/ler-comprovantes'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   id:
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros'
     | '/_authenticated/visao-geral'
     | '/api/ler-boletim'
+    | '/api/ler-comprovantes'
     | '/_authenticated/obras/$id/$secao'
     | '/_authenticated/obras/$id/painel'
   fileRoutesById: FileRoutesById
@@ -125,6 +137,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiLerBoletimRoute: typeof ApiLerBoletimRoute
+  ApiLerComprovantesRoute: typeof ApiLerComprovantesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLerBoletimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ler-comprovantes': {
+      id: '/api/ler-comprovantes'
+      path: '/api/ler-comprovantes'
+      fullPath: '/api/ler-comprovantes'
+      preLoaderRoute: typeof ApiLerComprovantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/obras/$id/$secao': {
       id: '/_authenticated/obras/$id/$secao'
       path: '/obras/$id/$secao'
@@ -210,6 +230,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiLerBoletimRoute: ApiLerBoletimRoute,
+  ApiLerComprovantesRoute: ApiLerComprovantesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
