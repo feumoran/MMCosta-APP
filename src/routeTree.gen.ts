@@ -18,6 +18,7 @@ import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authentic
 import { Route as ApiLerBoletimRouteImport } from './routes/api/ler-boletim'
 import { Route as ApiLerComprovantesRouteImport } from './routes/api/ler-comprovantes'
 import { Route as ApiLerPlanilhaMedicaoRouteImport } from './routes/api/ler-planilha-medicao'
+import { Route as AuthenticatedObrasIndexRouteImport } from './routes/_authenticated/obras.index'
 import { Route as AuthenticatedObrasIdSecaoRouteImport } from './routes/_authenticated/obras/$id/$secao'
 import { Route as AuthenticatedObrasIdPainelRouteImport } from './routes/_authenticated/obras/$id/painel'
 
@@ -66,6 +67,11 @@ const ApiLerPlanilhaMedicaoRoute = ApiLerPlanilhaMedicaoRouteImport.update({
   path: '/api/ler-planilha-medicao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedObrasIndexRoute = AuthenticatedObrasIndexRouteImport.update({
+  id: '/obras/',
+  path: '/obras/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedObrasIdSecaoRoute =
   AuthenticatedObrasIdSecaoRouteImport.update({
     id: '/obras/$id/$secao',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/obras/': typeof AuthenticatedObrasIndexRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/obras': typeof AuthenticatedObrasIndexRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/_authenticated/obras/': typeof AuthenticatedObrasIndexRoute
   '/_authenticated/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/_authenticated/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/obras/'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   fileRoutesByTo: FileRoutesByTo
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/obras'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   id:
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/_authenticated/obras/'
     | '/_authenticated/obras/$id/$secao'
     | '/_authenticated/obras/$id/painel'
   fileRoutesById: FileRoutesById
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLerPlanilhaMedicaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/obras/': {
+      id: '/_authenticated/obras/'
+      path: '/obras'
+      fullPath: '/obras/'
+      preLoaderRoute: typeof AuthenticatedObrasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/obras/$id/$secao': {
       id: '/_authenticated/obras/$id/$secao'
       path: '/obras/$id/$secao'
@@ -252,6 +271,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedRegistroAlteracoesRoute: typeof AuthenticatedRegistroAlteracoesRoute
   AuthenticatedVisaoGeralRoute: typeof AuthenticatedVisaoGeralRoute
+  AuthenticatedObrasIndexRoute: typeof AuthenticatedObrasIndexRoute
   AuthenticatedObrasIdSecaoRoute: typeof AuthenticatedObrasIdSecaoRoute
   AuthenticatedObrasIdPainelRoute: typeof AuthenticatedObrasIdPainelRoute
 }
@@ -260,6 +280,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedRegistroAlteracoesRoute: AuthenticatedRegistroAlteracoesRoute,
   AuthenticatedVisaoGeralRoute: AuthenticatedVisaoGeralRoute,
+  AuthenticatedObrasIndexRoute: AuthenticatedObrasIndexRoute,
   AuthenticatedObrasIdSecaoRoute: AuthenticatedObrasIdSecaoRoute,
   AuthenticatedObrasIdPainelRoute: AuthenticatedObrasIdPainelRoute,
 }
