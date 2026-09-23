@@ -47,6 +47,160 @@ export type Database = {
         }
         Relationships: []
       }
+      boletim_itens: {
+        Row: {
+          boletim_id: string
+          categoria_perfuracao:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          confianca: Json | null
+          created_at: string
+          created_by: string | null
+          descricao: string
+          id: string
+          quantidade: number
+          servico_id: string | null
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          boletim_id: string
+          categoria_perfuracao?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          confianca?: Json | null
+          created_at?: string
+          created_by?: string | null
+          descricao: string
+          id?: string
+          quantidade: number
+          servico_id?: string | null
+          unidade: string
+          updated_at?: string
+        }
+        Update: {
+          boletim_id?: string
+          categoria_perfuracao?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          confianca?: Json | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string
+          id?: string
+          quantidade?: number
+          servico_id?: string | null
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_itens_boletim_id_fkey"
+            columns: ["boletim_id"]
+            isOneToOne: false
+            referencedRelation: "boletins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boletim_itens_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletins: {
+        Row: {
+          arquivo_path: string
+          arquivo_tipo: string
+          confianca_ia: Json | null
+          confirmado_em: string | null
+          created_at: string
+          created_by: string | null
+          data: string
+          equipamento_id: string | null
+          equipamento_texto: string | null
+          equipe_id: string | null
+          equipe_texto: string | null
+          extracao_ia: Json | null
+          horas_paradas: number | null
+          horas_trabalhadas: number | null
+          id: string
+          motivo_parada: string | null
+          obra_id: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["boletim_status"]
+          updated_at: string
+        }
+        Insert: {
+          arquivo_path: string
+          arquivo_tipo: string
+          confianca_ia?: Json | null
+          confirmado_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          data: string
+          equipamento_id?: string | null
+          equipamento_texto?: string | null
+          equipe_id?: string | null
+          equipe_texto?: string | null
+          extracao_ia?: Json | null
+          horas_paradas?: number | null
+          horas_trabalhadas?: number | null
+          id?: string
+          motivo_parada?: string | null
+          obra_id: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["boletim_status"]
+          updated_at?: string
+        }
+        Update: {
+          arquivo_path?: string
+          arquivo_tipo?: string
+          confianca_ia?: Json | null
+          confirmado_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          equipamento_id?: string | null
+          equipamento_texto?: string | null
+          equipe_id?: string | null
+          equipe_texto?: string | null
+          extracao_ia?: Json | null
+          horas_paradas?: number | null
+          horas_trabalhadas?: number | null
+          id?: string
+          motivo_parada?: string | null
+          obra_id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["boletim_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletins_equipamento_id_fkey"
+            columns: ["equipamento_id"]
+            isOneToOne: false
+            referencedRelation: "equipamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boletins_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boletins_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_lancamento: {
         Row: {
           ativo: boolean
@@ -739,6 +893,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "escritorio" | "engenharia" | "leitura"
+      boletim_status: "pendente" | "lido_ia" | "confirmado"
       categoria_perfuracao: "solo" | "rocha_alterada" | "rocha"
       centro_custo_tipo: "obra" | "administrativo"
       lancamento_tipo: "recebimento" | "pagamento"
@@ -872,6 +1027,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "escritorio", "engenharia", "leitura"],
+      boletim_status: ["pendente", "lido_ia", "confirmado"],
       categoria_perfuracao: ["solo", "rocha_alterada", "rocha"],
       centro_custo_tipo: ["obra", "administrativo"],
       lancamento_tipo: ["recebimento", "pagamento"],
