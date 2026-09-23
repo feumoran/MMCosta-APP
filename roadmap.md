@@ -1,6 +1,8 @@
 # Roadmap — ERP MMcosta
 
 ## Etapa 1 — fundação solicitada
+- [ ] Incorporar a importação do cliente dentro de Medições e criar o comparativo entre medição interna e recebida
+- [ ] Reorganizar o topo: Visão geral como início, logo voltando ao início e nova área Obras com os acessos por obra
 - [ ] Cloud, autenticação por e-mail, primeiro administrador e gestão de usuários
 - [ ] Tabelas desta etapa, segurança por papel, auditoria e centro de custo automático por obra
 - [ ] Carga real inicial de clientes, obras, centros, equipamentos, equipes, marcos e caixa
