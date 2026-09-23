@@ -144,7 +144,7 @@ const categoryFrom = (service: string): Category | null => {
   return null;
 };
 
-export function MeasurementImport({ obraId }: { obraId: string }) {
+export function MeasurementImport({ obraId, embedded = false }: { obraId: string; embedded?: boolean }) {
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -608,9 +608,9 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
   return (
     <div className="space-y-10">
       <header>
-        <p className="text-xs font-bold uppercase text-primary">Medições externas</p>
-        <h1 className="font-display text-3xl font-bold">Importar planilha de medição</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Cada linha pode ser distribuída para uma obra diferente.</p>
+        <p className="text-xs font-bold uppercase text-primary">Medição recebida do cliente</p>
+        <h2 className={`font-display font-bold ${embedded ? "text-2xl" : "text-3xl"}`}>Importar planilha de medição</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Use o arquivo do cliente para conferir quantidades e valores com a medição da MMcosta. Cada linha pode ser distribuída para uma obra diferente.</p>
       </header>
 
       <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
