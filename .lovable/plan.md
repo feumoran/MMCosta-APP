@@ -13,6 +13,7 @@ Concluir as áreas de comprovantes e documentos, aplicar as permissões por pape
    - Classificação por descrição antes do motivo, incluindo as exceções de manutenção e alojamento informadas.
    - Prévia editável com conferência de totais, duplicidades, itens pendentes e resumo por centro.
    - Distribuição de pagamentos, aprendizado de apelidos, histórico, detalhe e download do original.
+   - Busca textual, filtros por período e status e ordenação na tabela de comprovantes.
    - Valores de caixa ocultos para Engenharia e acesso de escrita restrito a Admin/Escritório.
 
 2. **Documentos da obra**

@@ -10,7 +10,7 @@
 - [ ] Boletim móvel com arquivo privado, leitura multimodal, revisão humana e arquivo histórico
 - [ ] Medições por período, vínculo de boletins, preços, exportações, status, recebimento e atualização do painel
 - [ ] Importação de XLSX/XLS/CSV/PDF, mapeamento, identificação por linha, distribuição por obra e histórico
-- [ ] Comprovantes com IA, classificação determinística, distribuição por centro, duplicidade, histórico e validação do arquivo real
+- [ ] Comprovantes com IA, classificação determinística, distribuição por centro, duplicidade, histórico, busca textual, filtros por período/status, ordenação e validação do arquivo real
 - [ ] Documentos da obra com envio múltiplo, progresso, busca, filtros, pré-visualização e permissões por papel
 - [ ] Revisão de segurança, testes por papel, estados, formatação, celular, modo escuro e Registro de alterações
 - [ ] Painel da obra com indicadores, progresso, curva S e fluxo de caixa completo
