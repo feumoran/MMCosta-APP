@@ -58,6 +58,7 @@ export type Database = {
           created_by: string | null
           descricao: string
           id: string
+          origem: Database["public"]["Enums"]["boletim_item_origem"] | null
           quantidade: number
           servico_id: string | null
           unidade: string
@@ -73,6 +74,7 @@ export type Database = {
           created_by?: string | null
           descricao: string
           id?: string
+          origem?: Database["public"]["Enums"]["boletim_item_origem"] | null
           quantidade: number
           servico_id?: string | null
           unidade: string
@@ -88,6 +90,7 @@ export type Database = {
           created_by?: string | null
           descricao?: string
           id?: string
+          origem?: Database["public"]["Enums"]["boletim_item_origem"] | null
           quantidade?: number
           servico_id?: string | null
           unidade?: string
@@ -115,66 +118,66 @@ export type Database = {
           arquivo_path: string
           arquivo_tipo: string
           confianca_ia: Json | null
-          confirmado_em: string | null
+          contratante: string | null
           created_at: string
           created_by: string | null
           data: string
+          encarregado: string | null
           equipamento_id: string | null
-          equipamento_texto: string | null
           equipe_id: string | null
-          equipe_texto: string | null
           extracao_ia: Json | null
-          horas_paradas: number | null
-          horas_trabalhadas: number | null
           id: string
-          motivo_parada: string | null
+          local: string | null
           obra_id: string
           observacoes: string | null
+          revisado_em: string | null
+          revisado_por: string | null
           status: Database["public"]["Enums"]["boletim_status"]
+          tipo: Database["public"]["Enums"]["boletim_tipo"]
           updated_at: string
         }
         Insert: {
           arquivo_path: string
           arquivo_tipo: string
           confianca_ia?: Json | null
-          confirmado_em?: string | null
+          contratante?: string | null
           created_at?: string
           created_by?: string | null
           data: string
+          encarregado?: string | null
           equipamento_id?: string | null
-          equipamento_texto?: string | null
           equipe_id?: string | null
-          equipe_texto?: string | null
           extracao_ia?: Json | null
-          horas_paradas?: number | null
-          horas_trabalhadas?: number | null
           id?: string
-          motivo_parada?: string | null
+          local?: string | null
           obra_id: string
           observacoes?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
           status?: Database["public"]["Enums"]["boletim_status"]
+          tipo: Database["public"]["Enums"]["boletim_tipo"]
           updated_at?: string
         }
         Update: {
           arquivo_path?: string
           arquivo_tipo?: string
           confianca_ia?: Json | null
-          confirmado_em?: string | null
+          contratante?: string | null
           created_at?: string
           created_by?: string | null
           data?: string
+          encarregado?: string | null
           equipamento_id?: string | null
-          equipamento_texto?: string | null
           equipe_id?: string | null
-          equipe_texto?: string | null
           extracao_ia?: Json | null
-          horas_paradas?: number | null
-          horas_trabalhadas?: number | null
           id?: string
-          motivo_parada?: string | null
+          local?: string | null
           obra_id?: string
           observacoes?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
           status?: Database["public"]["Enums"]["boletim_status"]
+          tipo?: Database["public"]["Enums"]["boletim_tipo"]
           updated_at?: string
         }
         Relationships: [
@@ -197,6 +200,376 @@ export type Database = {
             columns: ["obra_id"]
             isOneToOne: false
             referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletim_estaca: {
+        Row: {
+          apoio_encontro: string | null
+          armacao_longitudinal_comprimento_m: number | null
+          armacao_longitudinal_diametro_cm: string | null
+          armacao_transversal: string | null
+          bloco: string | null
+          boletim_id: string
+          camisa_perdida_pol: string | null
+          carga: string | null
+          comprimento_projeto_m: number | null
+          created_at: string
+          created_by: string | null
+          diametro_mm: number | null
+          estaca: string | null
+          id: string
+          inclinada_graus: number | null
+          injecao_areia_l: number | null
+          injecao_cimento_sc: number | null
+          injecao_data_inicio: string | null
+          injecao_data_termino: string | null
+          injecao_hora_inicio: string | null
+          injecao_hora_termino: string | null
+          lavagem_agua: boolean
+          lavagem_ar_comprimido: boolean
+          lavagem_polimero: boolean
+          perfuracao_data_inicio: string | null
+          perfuracao_data_termino: string | null
+          perfuracao_hora_inicio: string | null
+          perfuracao_hora_termino: string | null
+          revestimento_pol_mm: string | null
+          trecho_nao_revestido_m: number | null
+          trecho_revestido_m: number | null
+          updated_at: string
+        }
+        Insert: {
+          apoio_encontro?: string | null
+          armacao_longitudinal_comprimento_m?: number | null
+          armacao_longitudinal_diametro_cm?: string | null
+          armacao_transversal?: string | null
+          bloco?: string | null
+          boletim_id: string
+          camisa_perdida_pol?: string | null
+          carga?: string | null
+          comprimento_projeto_m?: number | null
+          created_at?: string
+          created_by?: string | null
+          diametro_mm?: number | null
+          estaca?: string | null
+          id?: string
+          inclinada_graus?: number | null
+          injecao_areia_l?: number | null
+          injecao_cimento_sc?: number | null
+          injecao_data_inicio?: string | null
+          injecao_data_termino?: string | null
+          injecao_hora_inicio?: string | null
+          injecao_hora_termino?: string | null
+          lavagem_agua?: boolean
+          lavagem_ar_comprimido?: boolean
+          lavagem_polimero?: boolean
+          perfuracao_data_inicio?: string | null
+          perfuracao_data_termino?: string | null
+          perfuracao_hora_inicio?: string | null
+          perfuracao_hora_termino?: string | null
+          revestimento_pol_mm?: string | null
+          trecho_nao_revestido_m?: number | null
+          trecho_revestido_m?: number | null
+          updated_at?: string
+        }
+        Update: {
+          apoio_encontro?: string | null
+          armacao_longitudinal_comprimento_m?: number | null
+          armacao_longitudinal_diametro_cm?: string | null
+          armacao_transversal?: string | null
+          bloco?: string | null
+          boletim_id?: string
+          camisa_perdida_pol?: string | null
+          carga?: string | null
+          comprimento_projeto_m?: number | null
+          created_at?: string
+          created_by?: string | null
+          diametro_mm?: number | null
+          estaca?: string | null
+          id?: string
+          inclinada_graus?: number | null
+          injecao_areia_l?: number | null
+          injecao_cimento_sc?: number | null
+          injecao_data_inicio?: string | null
+          injecao_data_termino?: string | null
+          injecao_hora_inicio?: string | null
+          injecao_hora_termino?: string | null
+          lavagem_agua?: boolean
+          lavagem_ar_comprimido?: boolean
+          lavagem_polimero?: boolean
+          perfuracao_data_inicio?: string | null
+          perfuracao_data_termino?: string | null
+          perfuracao_hora_inicio?: string | null
+          perfuracao_hora_termino?: string | null
+          revestimento_pol_mm?: string | null
+          trecho_nao_revestido_m?: number | null
+          trecho_revestido_m?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_estaca_boletim_id_fkey"
+            columns: ["boletim_id"]
+            isOneToOne: true
+            referencedRelation: "boletins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletim_estaca_trecho: {
+        Row: {
+          boletim_estaca_id: string
+          categoria_perfuracao:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          classificacao_solo: string | null
+          created_at: string
+          created_by: string | null
+          diametro_mm: number | null
+          id: string
+          ordem: number
+          profundidade_a_m: number
+          profundidade_de_m: number
+          updated_at: string
+        }
+        Insert: {
+          boletim_estaca_id: string
+          categoria_perfuracao?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          classificacao_solo?: string | null
+          created_at?: string
+          created_by?: string | null
+          diametro_mm?: number | null
+          id?: string
+          ordem?: number
+          profundidade_a_m: number
+          profundidade_de_m: number
+          updated_at?: string
+        }
+        Update: {
+          boletim_estaca_id?: string
+          categoria_perfuracao?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          classificacao_solo?: string | null
+          created_at?: string
+          created_by?: string | null
+          diametro_mm?: number | null
+          id?: string
+          ordem?: number
+          profundidade_a_m?: number
+          profundidade_de_m?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_estaca_trecho_boletim_estaca_id_fkey"
+            columns: ["boletim_estaca_id"]
+            isOneToOne: false
+            referencedRelation: "boletim_estaca"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletim_tirante: {
+        Row: {
+          bainha_cimento_kg: number | null
+          bainha_data: string | null
+          bainha_duracao_min: number | null
+          bainha_hora_inicio: string | null
+          bainha_hora_termino: string | null
+          bainha_observacoes: string | null
+          bainha_pressao_kg_cm: number | null
+          bainha_traco_ac: string | null
+          boletim_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          inclinacao_p_baixo_graus: number | null
+          perfuracao_categoria:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          perfuracao_data: string | null
+          perfuracao_hora_inicio: string | null
+          perfuracao_hora_termino: string | null
+          perfuracao_observacoes: string | null
+          perfuracao_profundidade_m: number | null
+          perfuracao_terreno: string | null
+          tirante_armacao: string | null
+          tirante_comprimento_m: number | null
+          tirante_data_instalacao: string | null
+          tirante_numero_manchetes: number | null
+          tirante_observacoes: string | null
+          tirante_trecho_ancorado_m: number | null
+          tirante_trecho_livre_m: number | null
+          updated_at: string
+        }
+        Insert: {
+          bainha_cimento_kg?: number | null
+          bainha_data?: string | null
+          bainha_duracao_min?: number | null
+          bainha_hora_inicio?: string | null
+          bainha_hora_termino?: string | null
+          bainha_observacoes?: string | null
+          bainha_pressao_kg_cm?: number | null
+          bainha_traco_ac?: string | null
+          boletim_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inclinacao_p_baixo_graus?: number | null
+          perfuracao_categoria?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          perfuracao_data?: string | null
+          perfuracao_hora_inicio?: string | null
+          perfuracao_hora_termino?: string | null
+          perfuracao_observacoes?: string | null
+          perfuracao_profundidade_m?: number | null
+          perfuracao_terreno?: string | null
+          tirante_armacao?: string | null
+          tirante_comprimento_m?: number | null
+          tirante_data_instalacao?: string | null
+          tirante_numero_manchetes?: number | null
+          tirante_observacoes?: string | null
+          tirante_trecho_ancorado_m?: number | null
+          tirante_trecho_livre_m?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bainha_cimento_kg?: number | null
+          bainha_data?: string | null
+          bainha_duracao_min?: number | null
+          bainha_hora_inicio?: string | null
+          bainha_hora_termino?: string | null
+          bainha_observacoes?: string | null
+          bainha_pressao_kg_cm?: number | null
+          bainha_traco_ac?: string | null
+          boletim_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inclinacao_p_baixo_graus?: number | null
+          perfuracao_categoria?:
+            | Database["public"]["Enums"]["categoria_perfuracao"]
+            | null
+          perfuracao_data?: string | null
+          perfuracao_hora_inicio?: string | null
+          perfuracao_hora_termino?: string | null
+          perfuracao_observacoes?: string | null
+          perfuracao_profundidade_m?: number | null
+          perfuracao_terreno?: string | null
+          tirante_armacao?: string | null
+          tirante_comprimento_m?: number | null
+          tirante_data_instalacao?: string | null
+          tirante_numero_manchetes?: number | null
+          tirante_observacoes?: string | null
+          tirante_trecho_ancorado_m?: number | null
+          tirante_trecho_livre_m?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_tirante_boletim_id_fkey"
+            columns: ["boletim_id"]
+            isOneToOne: true
+            referencedRelation: "boletins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletim_tirante_fase: {
+        Row: {
+          boletim_tirante_id: string
+          created_at: string
+          created_by: string | null
+          dia: string | null
+          fase_numero: number
+          hora: string | null
+          id: string
+          leituras_manchete: Json
+          updated_at: string
+        }
+        Insert: {
+          boletim_tirante_id: string
+          created_at?: string
+          created_by?: string | null
+          dia?: string | null
+          fase_numero: number
+          hora?: string | null
+          id?: string
+          leituras_manchete?: Json
+          updated_at?: string
+        }
+        Update: {
+          boletim_tirante_id?: string
+          created_at?: string
+          created_by?: string | null
+          dia?: string | null
+          fase_numero?: number
+          hora?: string | null
+          id?: string
+          leituras_manchete?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_tirante_fase_boletim_tirante_id_fkey"
+            columns: ["boletim_tirante_id"]
+            isOneToOne: false
+            referencedRelation: "boletim_tirante"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boletim_concreto_item: {
+        Row: {
+          boletim_id: string
+          created_at: string
+          created_by: string | null
+          data: string | null
+          id: string
+          material_aplicado: string
+          numero_nf: string | null
+          ordem: number
+          quantidade: number
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          boletim_id: string
+          created_at?: string
+          created_by?: string | null
+          data?: string | null
+          id?: string
+          material_aplicado: string
+          numero_nf?: string | null
+          ordem?: number
+          quantidade: number
+          unidade: string
+          updated_at?: string
+        }
+        Update: {
+          boletim_id?: string
+          created_at?: string
+          created_by?: string | null
+          data?: string | null
+          id?: string
+          material_aplicado?: string
+          numero_nf?: string | null
+          ordem?: number
+          quantidade?: number
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_concreto_item_boletim_id_fkey"
+            columns: ["boletim_id"]
+            isOneToOne: false
+            referencedRelation: "boletins"
             referencedColumns: ["id"]
           },
         ]
@@ -1171,6 +1544,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "escritorio" | "engenharia" | "leitura"
       boletim_status: "pendente" | "lido_ia" | "confirmado"
+      boletim_tipo: "estaca_raiz" | "injecao_tirante" | "concreto_projetado"
+      boletim_item_origem:
+        | "trecho_perfuracao"
+        | "injecao_estaca"
+        | "injecao_tirante"
+        | "material_concreto"
       categoria_perfuracao: "solo" | "rocha_alterada" | "rocha"
       centro_custo_tipo: "obra" | "administrativo"
       documento_categoria:
@@ -1326,6 +1705,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "escritorio", "engenharia", "leitura"],
       boletim_status: ["pendente", "lido_ia", "confirmado"],
+      boletim_tipo: ["estaca_raiz", "injecao_tirante", "concreto_projetado"],
+      boletim_item_origem: [
+        "trecho_perfuracao",
+        "injecao_estaca",
+        "injecao_tirante",
+        "material_concreto",
+      ],
       categoria_perfuracao: ["solo", "rocha_alterada", "rocha"],
       centro_custo_tipo: ["obra", "administrativo"],
       documento_categoria: [
