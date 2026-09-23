@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/ler-boletim")({ server: { handlers: {
       model: lovable.responses("openai/gpt-6-astra"), maxRetries: 0,
       system: `${prompts[tipo]} ${domain}`,
       messages: [{ role: "user", content: [{ type: "text", text: "Extraia o boletim anexado conforme as instruções." }, media] }],
-      tools: { registrar_boletim: tool({ description: "Entrega a leitura estruturada e as confianças do boletim.", inputSchema: schema }) },
+      tools: { registrar_boletim: tool({ description: "Entrega a leitura estruturada e as confianças do boletim.", inputSchema: schema as any }) },
       toolChoice: { type: "tool", toolName: "registrar_boletim" }, stopWhen: hasToolCall("registrar_boletim"),
       providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
     });
