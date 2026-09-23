@@ -1,6 +1,14 @@
 export const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 export const pct = (value: number) => `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
-export const dateBR = (value: string | Date) => new Intl.DateTimeFormat("pt-BR").format(typeof value === "string" ? new Date(`${value}T12:00:00`) : value);
+export const dateBR = (value: string | Date | null | undefined) => {
+  if (!value) return "—";
+  const date = value instanceof Date
+    ? value
+    : /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? new Date(`${value}T12:00:00`)
+      : new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : new Intl.DateTimeFormat("pt-BR").format(date);
+};
 export const daysBetween = (a: string, b: string) => Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 export function smoothstep(t: number) { const x=Math.max(0,Math.min(1,t)); return x*x*x*(6*x*x-15*x+10); }
 export function obraHealth(status: string, start: string, end: string, physical: number) {
