@@ -325,7 +325,18 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
         const page = await pdf.getPage(pageNumber);
         const content = await page.getTextContent();
-        textParts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+        const positioned = content.items
+          .filter((item): item is typeof item & { str: string; transform: number[] } => "str" in item && "transform" in item)
+          .map((item) => ({ text: item.str.trim(), x: item.transform[4] ?? 0, y: item.transform[5] ?? 0 }))
+          .filter((item) => item.text)
+          .sort((a, b) => Math.abs(b.y - a.y) > 2 ? b.y - a.y : a.x - b.x);
+        const lines: Array<{ y: number; cells: Array<{ x: number; text: string }> }> = [];
+        positioned.forEach((item) => {
+          const line = lines.find((candidate) => Math.abs(candidate.y - item.y) <= 2);
+          if (line) line.cells.push({ x: item.x, text: item.text });
+          else lines.push({ y: item.y, cells: [{ x: item.x, text: item.text }] });
+        });
+        textParts.push(lines.map((line) => line.cells.sort((a, b) => a.x - b.x).map((cell) => cell.text).join(" | ")).join("\n"));
       }
       const extractedText = textParts.join("\n").trim();
       const pages: string[] = [];

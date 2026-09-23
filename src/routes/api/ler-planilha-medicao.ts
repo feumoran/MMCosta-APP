@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/ler-planilha-medicao")({
             model: lovable.responses("openai/gpt-6-astra"),
             maxRetries: 0,
             system:
-              "Extraia uma medição brasileira sem inventar dados. Uma linha por serviço e obra. Preserve o texto original da obra ou centro de custo. Datas devem sair em aaaa-mm-dd quando legíveis. Converta vírgula decimal corretamente. Categoria de perfuração só pode ser solo, rocha_alterada ou rocha. Se houver colunas Anterior, Atual e Acumulado, use Atual. Chame registrar_medicao exatamente uma vez.",
+              "Extraia uma medição brasileira sem inventar dados. Uma linha por serviço e obra. Preserve o texto original da obra ou centro de custo. Datas devem sair em aaaa-mm-dd quando legíveis. Converta vírgula decimal corretamente. Categoria de perfuração só pode ser solo, rocha_alterada ou rocha. Em tabelas com grupos DADOS CONTRATUAIS, QUANTIDADES MEDIDAS e VALORES MEDIDOS, extraia exclusivamente as colunas ATUAL de QUANTIDADES MEDIDAS e ATUAL de VALORES MEDIDOS. Inclua toda linha de serviço cujo VALOR ATUAL seja preenchido e maior que zero, mantendo descrição, quantidade atual, unidade, preço unitário contratual e valor atual da mesma linha visual. Nunca use saldo, acumulado, anterior ou total contratual como linha. Antes de responder, some os valores atuais extraídos e confira contra o TOTAL DOS SERVIÇOS na coluna ATUAL; revise linhas omitidas ou deslocadas até reconciliar a soma, aceitando diferença máxima de R$ 0,02. Chame registrar_medicao exatamente uma vez.",
             messages: [
               {
                 role: "user",
@@ -121,6 +121,10 @@ export const Route = createFileRoute("/api/ler-planilha-medicao")({
           const checked = outputSchema.safeParse(raw);
           if (!checked.success) {
             return fail(422, "A leitura terminou, mas algumas linhas precisam ser preenchidas manualmente.");
+          }
+          const extractedTotal = checked.data.linhas.reduce((sum, line) => sum + (line.valor_total ?? line.quantidade * (line.valor_unitario ?? 0)), 0);
+          if (checked.data.total_declarado !== null && Math.abs(extractedTotal - checked.data.total_declarado) > 0.02) {
+            return fail(422, `A soma das linhas (${extractedTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}) não confere com o total do documento (${checked.data.total_declarado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}). Nenhum registro foi criado; tente ler novamente ou revise manualmente.`);
           }
           return Response.json({ extracao: checked.data, runId: run.getRunId() });
         } catch (error) {
