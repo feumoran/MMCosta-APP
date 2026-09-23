@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
+import { Route as ApiLerBoletimRouteImport } from './routes/api/ler-boletim'
 import { Route as AuthenticatedObrasIdSecaoRouteImport } from './routes/_authenticated/obras/$id/$secao'
 import { Route as AuthenticatedObrasIdPainelRouteImport } from './routes/_authenticated/obras/$id/painel'
 
@@ -41,6 +42,11 @@ const AuthenticatedVisaoGeralRoute = AuthenticatedVisaoGeralRouteImport.update({
   path: '/visao-geral',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiLerBoletimRoute = ApiLerBoletimRouteImport.update({
+  id: '/api/ler-boletim',
+  path: '/api/ler-boletim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedObrasIdSecaoRoute =
   AuthenticatedObrasIdSecaoRouteImport.update({
     id: '/obras/$id/$secao',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
+  '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
+  '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
+  '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/_authenticated/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/_authenticated/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
 }
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastros'
     | '/visao-geral'
+    | '/api/ler-boletim'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   fileRoutesByTo: FileRoutesByTo
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastros'
     | '/visao-geral'
+    | '/api/ler-boletim'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
   id:
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/cadastros'
     | '/_authenticated/visao-geral'
+    | '/api/ler-boletim'
     | '/_authenticated/obras/$id/$secao'
     | '/_authenticated/obras/$id/painel'
   fileRoutesById: FileRoutesById
@@ -112,6 +124,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiLerBoletimRoute: typeof ApiLerBoletimRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVisaoGeralRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/ler-boletim': {
+      id: '/api/ler-boletim'
+      path: '/api/ler-boletim'
+      fullPath: '/api/ler-boletim'
+      preLoaderRoute: typeof ApiLerBoletimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/obras/$id/$secao': {
       id: '/_authenticated/obras/$id/$secao'
       path: '/obras/$id/$secao'
@@ -189,6 +209,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiLerBoletimRoute: ApiLerBoletimRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
