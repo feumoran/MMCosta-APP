@@ -7,13 +7,13 @@
 - [ ] Layout responsivo, tema claro/escuro, seletor de obras e oito áreas com estados Em breve
 - [ ] Cadastros de clientes, obras, equipamentos, equipes, centros, aliases e categorias
 - [ ] Serviços, preços padrão/por obra, vigência, busca de preço e auditoria
+- [ ] Boletim móvel com arquivo privado, leitura multimodal, revisão humana e arquivo histórico
+- [ ] Medições por período, vínculo de boletins, preços, exportações, status, recebimento e atualização do painel
+- [ ] Importação de XLSX/XLS/CSV/PDF, mapeamento, identificação por linha, distribuição por obra e histórico
+- [ ] Comprovantes com IA, classificação determinística, distribuição por centro, duplicidade, histórico e validação do arquivo real
+- [ ] Documentos da obra com envio múltiplo, progresso, busca, filtros, pré-visualização e permissões por papel
+- [ ] Revisão de segurança, testes por papel, estados, formatação, celular, modo escuro e Registro de alterações
 - [ ] Painel da obra com indicadores, progresso, curva S e fluxo de caixa completo
 - [ ] Visão geral consolidada por obra ativa
 - [ ] Verificação de cálculos, acessos, telas e segurança
 
-## Etapas futuras — fora do escopo atual
-- [ ] Boletins
-- [ ] Medições
-- [ ] Importações
-- [ ] Comprovantes
-- [ ] Documentos
