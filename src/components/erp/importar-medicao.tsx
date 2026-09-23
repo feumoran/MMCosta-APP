@@ -287,8 +287,10 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
     setRawRows([]);
     setDeclaredTotal(null);
     setMessage("");
+    let uploadedId = "";
     try {
       const uploaded = await uploadImport(selected);
+      uploadedId = uploaded.id;
       if (!/\.pdf$/i.test(selected.name)) {
         const workbook = XLSX.read(await selected.arrayBuffer(), { type: "array", cellDates: true });
         const sheetName = workbook.SheetNames[0];
@@ -305,7 +307,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
         fromRaw(detected, sourceRows);
       }
     } catch (caught) {
-      if (typeof uploaded !== "undefined") await supabase.from("importacoes").update({ status: "erro" }).eq("id", uploaded.id);
+      if (uploadedId) await supabase.from("importacoes").update({ status: "erro" }).eq("id", uploadedId);
       toast.error(caught instanceof Error ? caught.message : "Não foi possível abrir o arquivo.");
       setPath("");
       setImportId("");
@@ -710,10 +712,10 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
                             </Select>
                           ) : "—"}
                         </td>
-                        <td><Input className="w-24 font-mono" inputMode="decimal" value={String(row.quantidade).replace(".", ",")} onChange={(event) => { const quantity = numberValue(event.target.value); updateRow(row.key, { quantidade: quantity, valorTotal: quantity * row.valorUnitario }); }} /></td>
+                        <td><Input className="w-24 font-mono" inputMode="decimal" value={String(row.quantidade).replace(".", ",")} onChange={(event) => { const quantity = numberValue(event.target.value); const nextTotal = quantity * row.valorUnitario; updateRow(row.key, { quantidade: quantity, valorTotal: nextTotal, valorInformado: nextTotal }); }} /></td>
                         <td><Input className="w-24" value={row.unidade} onChange={(event) => updateRow(row.key, { unidade: event.target.value })} /></td>
                         <td className="text-right">
-                          <Input className="w-32 font-mono text-right" inputMode="decimal" value={String(row.valorTotal).replace(".", ",")} onChange={(event) => { const value = numberValue(event.target.value); updateRow(row.key, { valorTotal: value, valorUnitario: row.quantidade ? value / row.quantidade : 0 }); }} />
+                          <Input className="w-32 font-mono text-right" inputMode="decimal" value={String(row.valorTotal).replace(".", ",")} onChange={(event) => { const value = numberValue(event.target.value); updateRow(row.key, { valorTotal: value, valorUnitario: row.quantidade ? value / row.quantidade : 0, valorInformado: value }); }} />
                           <p className="mt-1 font-mono text-xs text-muted-foreground">{brl.format(row.valorUnitario)} / {row.unidade || "un."}</p>
                         </td>
                         <td><Button variant="ghost" size="icon" aria-label="Remover linha" onClick={() => setRows((current) => current.filter((item) => item.key !== row.key))}><Trash2 /></Button></td>
