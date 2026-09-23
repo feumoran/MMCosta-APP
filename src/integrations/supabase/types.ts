@@ -1162,6 +1162,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      profile_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          nome: string
+        }[]
+      }
       proximo_numero_medicao: { Args: { _obra: string }; Returns: number }
     }
     Enums: {
