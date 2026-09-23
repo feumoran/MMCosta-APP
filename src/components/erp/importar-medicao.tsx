@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, FileSpreadsheet, LoaderCircle, Trash2, Upload } from "lucide-react";
+import { Download, Eye, FileSpreadsheet, LoaderCircle, RotateCcw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ type PreviewRow = {
   unidade: string;
   valorUnitario: number;
   valorTotal: number;
+  valorInformado: number | null;
 };
 type PdfExtraction = {
   total_declarado: number | null;
@@ -114,7 +115,7 @@ const isoDate = (value: RawCell) => {
 const detectHeader = (rows: RawCell[][]) => {
   let best = { index: 0, score: -1 };
   rows.slice(0, 30).forEach((row, index) => {
-    const score = row.reduce((sum, cell) => {
+    const score = row.reduce<number>((sum, cell) => {
       const text = normalize(String(cell ?? ""));
       return sum + (Object.values(synonyms).some((list) => list.some((word) => text.includes(word))) ? 1 : 0);
     }, 0);
@@ -161,7 +162,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["measurement-imports"],
     queryFn: async () => {
-      const [userResult, rolesResult, worksResult, centersResult, aliasesResult, servicesResult, importsResult] =
+      const [userResult, rolesResult, worksResult, centersResult, aliasesResult, servicesResult, importsResult, measurementsResult] =
         await Promise.all([
           supabase.auth.getUser(),
           supabase.from("user_roles").select("role"),
@@ -170,8 +171,9 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
           supabase.from("cc_aliases").select("centro_custo_id,texto_normalizado"),
           supabase.from("servicos").select("id,nome,unidade,eh_perfuracao,palavras_chave").eq("ativo", true),
           supabase.from("importacoes").select("*").eq("tipo", "medicao").order("created_at", { ascending: false }),
+          supabase.from("medicoes").select("id,obra_id,numero,status,valor_total,importacao_id,created_at,created_by,medicao_itens(*)").eq("origem", "planilha_importada").order("created_at", { ascending: false }),
         ]);
-      const firstError = [worksResult.error, centersResult.error, aliasesResult.error, servicesResult.error, importsResult.error].find(Boolean);
+      const firstError = [worksResult.error, centersResult.error, aliasesResult.error, servicesResult.error, importsResult.error, measurementsResult.error].find(Boolean);
       if (firstError) throw firstError;
       return {
         user: userResult.data.user,
@@ -181,6 +183,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
         aliases: aliasesResult.data ?? [],
         services: servicesResult.data ?? [],
         imports: importsResult.data ?? [],
+        measurements: measurementsResult.data ?? [],
       };
     },
   });
@@ -241,6 +244,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
           unidade: String(get(row, "unidade") ?? "").trim(),
           valorUnitario: unitPrice || (quantity > 0 ? mappedTotal / quantity : 0),
           valorTotal: mappedTotal || quantity * unitPrice,
+          valorInformado: mappedTotal || null,
         };
       })
       .filter((row) => row.servicoTexto || row.quantidade || row.valorTotal);
@@ -301,7 +305,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
         fromRaw(detected, sourceRows);
       }
     } catch (caught) {
-      await supabase.from("importacoes").update({ status: "erro" }).eq("id", importId || "00000000-0000-0000-0000-000000000000");
+      if (typeof uploaded !== "undefined") await supabase.from("importacoes").update({ status: "erro" }).eq("id", uploaded.id);
       toast.error(caught instanceof Error ? caught.message : "Não foi possível abrir o arquivo.");
       setPath("");
       setImportId("");
@@ -371,6 +375,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
             unidade: line.unidade,
             valorUnitario: unitPrice,
             valorTotal: line.valor_total ?? line.quantidade * unitPrice,
+            valorInformado: line.valor_total,
           };
         }),
       );
@@ -390,10 +395,35 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
   const activeRows = rows.filter((row) => row.obraId !== "ignore");
   const involvedWorks = [...new Set(activeRows.map((row) => row.obraId).filter(Boolean))];
   const total = activeRows.reduce((sum, row) => sum + row.valorTotal, 0);
-  const invalidRows = activeRows.filter((row) => {
+  const signature = (row: PreviewRow) => [row.obraId, row.data, normalize(row.servicoTexto), row.categoria ?? "", row.quantidade.toFixed(3), row.unidade, row.valorTotal.toFixed(2)].join("|");
+  const priorSignatures = new Set<string>();
+  for (const item of data?.imports ?? []) {
+    if (item.status !== "concluida" || !item.resumo || typeof item.resumo !== "object" || Array.isArray(item.resumo)) continue;
+    const savedRows = (item.resumo as Record<string, unknown>)["linhas"];
+    if (!Array.isArray(savedRows)) continue;
+    savedRows.forEach((saved) => {
+      if (!saved || typeof saved !== "object" || Array.isArray(saved)) return;
+      const value = saved as Record<string, unknown>;
+      priorSignatures.add([value["obra_id"], value["data"], normalize(String(value["servico"] ?? "")), value["categoria_perfuracao"] ?? "", Number(value["quantidade"] ?? 0).toFixed(3), value["unidade"], Number(value["valor_total"] ?? 0).toFixed(2)].join("|"));
+    });
+  }
+  const currentCounts = new Map<string, number>();
+  activeRows.forEach((row) => currentCounts.set(signature(row), (currentCounts.get(signature(row)) ?? 0) + 1));
+  const rowProblems = (row: PreviewRow) => {
     const service = data?.services.find((item) => item.id === row.servicoId);
-    return !row.obraId || !row.servicoTexto || row.quantidade <= 0 || !row.unidade || row.valorTotal < 0 || (service?.eh_perfuracao && !row.categoria);
-  });
+    const problems: string[] = [];
+    if (!row.obraId) problems.push("obra obrigatória");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(row.data) || Number.isNaN(Date.parse(`${row.data}T12:00:00`))) problems.push("data inválida");
+    if (!row.servicoTexto.trim()) problems.push("serviço obrigatório");
+    if (row.quantidade <= 0 || !Number.isFinite(row.quantidade)) problems.push("quantidade inválida");
+    if (!row.unidade.trim()) problems.push("unidade obrigatória");
+    if (row.valorUnitario < 0 || row.valorTotal < 0 || !Number.isFinite(row.valorTotal)) problems.push("valor inválido");
+    if (row.valorInformado !== null && Math.abs(row.quantidade * row.valorUnitario - row.valorInformado) > 0.02) problems.push("total diferente de quantidade × valor unitário");
+    if (service?.eh_perfuracao && !row.categoria) problems.push("categoria de perfuração obrigatória");
+    if ((currentCounts.get(signature(row)) ?? 0) > 1 || priorSignatures.has(signature(row))) problems.push("linha duplicada");
+    return problems;
+  };
+  const invalidRows = activeRows.filter((row) => rowProblems(row).length > 0);
 
   const distribute = useMutation({
     mutationFn: async () => {
@@ -470,6 +500,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
 
         const summary = {
           total_declarado: declaredTotal,
+          usuario: activeUser.email ?? "Usuário",
           linhas_distribuidas: activeRows.length,
           obras: involvedWorks.map((id) => data.works.find((work) => work.id === id)?.nome ?? id),
           medicoes: createdMeasurements,
@@ -549,6 +580,22 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
   };
 
   const history = useMemo(() => data?.imports ?? [], [data]);
+
+  const undo = useMutation({
+    mutationFn: async (id: string) => {
+      const { data: count, error: undoError } = await supabase.rpc("desfazer_importacao_medicao", { _importacao: id });
+      if (undoError) throw undoError;
+      return count;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count ?? 0} medição(ões) desta importação foram canceladas.`);
+      setDetail(null);
+      queryClient.invalidateQueries({ queryKey: ["measurement-imports"] });
+      queryClient.invalidateQueries({ queryKey: ["measurements"] });
+      queryClient.invalidateQueries({ queryKey: ["obra"] });
+    },
+    onError: (caught) => toast.error(caught.message),
+  });
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando importações…</p>;
   if (error || !data) return <p className="text-sm text-destructive">Não foi possível carregar as importações.</p>;
@@ -631,7 +678,8 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
                 <tbody>
                   {rows.map((row) => {
                     const service = data.services.find((item) => item.id === row.servicoId);
-                    const invalid = row.obraId !== "ignore" && (!row.obraId || !row.servicoTexto || row.quantidade <= 0 || !row.unidade || (service?.eh_perfuracao && !row.categoria));
+                    const problems = row.obraId === "ignore" ? [] : rowProblems(row);
+                    const invalid = problems.length > 0;
                     return (
                       <tr key={row.key} className={`border-b align-top ${invalid ? "bg-warning/10" : ""}`}>
                         <td className="p-3">
@@ -652,6 +700,7 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
                         <td>
                           <Input className="w-64" value={row.servicoTexto} onChange={(event) => updateRow(row.key, { servicoTexto: event.target.value, servicoId: matchService(event.target.value), categoria: categoryFrom(event.target.value) })} />
                           <p className="mt-1 text-xs text-muted-foreground">{service ? `Catálogo: ${service.nome}` : "Serviço sem correspondência no catálogo"}</p>
+                          {problems.length > 0 && <p className="mt-1 text-xs text-warning">{problems.join(" · ")}</p>}
                         </td>
                         <td>
                           {(service?.eh_perfuracao || row.categoria) ? (
@@ -696,26 +745,28 @@ export function MeasurementImport({ obraId }: { obraId: string }) {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[850px] text-sm">
             <thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground">
-              <tr><th className="p-3">Data</th><th>Arquivo</th><th>Linhas</th><th className="text-right">Total</th><th>Obras envolvidas</th><th>Status</th><th>Ações</th></tr>
+              <tr><th className="p-3">Data</th><th>Arquivo</th><th>Usuário</th><th>Linhas</th><th className="text-right">Total</th><th>Obras / medições</th><th>Status</th><th>Ações</th></tr>
             </thead>
             <tbody>
               {history.map((item) => {
                 const entities = Array.isArray(item.entidades_envolvidas) ? item.entidades_envolvidas : [];
                 const summary = item.resumo && typeof item.resumo === "object" && !Array.isArray(item.resumo) ? item.resumo as Record<string, unknown> : {};
                 const workNames = Array.isArray(summary["obras"]) ? summary["obras"].map(String) : entities.map((id) => data.works.find((work) => work.id === id)?.nome ?? String(id));
+                const linked = data.measurements.filter((measurement) => measurement.importacao_id === item.id);
                 return (
                   <tr key={item.id} className="border-b">
                     <td className="p-3 font-mono">{dateBR(item.created_at)}</td>
                     <td>{item.arquivo_nome}</td>
+                    <td>{String(summary["usuario"] ?? (item.created_by === data.user?.id ? data.user.email ?? "Usuário" : "Usuário"))}</td>
                     <td className="font-mono">{item.linhas_total}</td>
                     <td className="text-right font-mono font-semibold">{brl.format(item.valor_total)}</td>
-                    <td className="max-w-xs truncate">{workNames.length ? workNames.join(", ") : "—"}</td>
+                    <td className="max-w-xs"><span className="block truncate">{workNames.length ? workNames.join(", ") : "—"}</span><span className="text-xs text-muted-foreground">{linked.map((measurement) => `${data.works.find((work) => work.id === measurement.obra_id)?.nome ?? "Obra"} · medição ${measurement.numero} · ${measurement.status}`).join("; ") || "Sem medição vinculada"}</span></td>
                     <td><span className="bg-muted px-2 py-1 text-xs font-semibold">{item.status}</span></td>
-                    <td><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label="Ver detalhe" onClick={() => setDetail({ ...summary, arquivo: item.arquivo_nome, status: item.status })}><Eye /></Button><Button variant="ghost" size="icon" aria-label="Baixar original" onClick={() => void download(item.arquivo_path, item.arquivo_nome)}><Download /></Button></div></td>
+                    <td><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label="Ver detalhe" onClick={() => setDetail({ ...summary, id: item.id, arquivo: item.arquivo_nome, status: item.status, medicoes: linked })}><Eye /></Button><Button variant="ghost" size="icon" aria-label="Baixar original" onClick={() => void download(item.arquivo_path, item.arquivo_nome)}><Download /></Button>{item.status === "concluida" && <Button variant="ghost" size="icon" aria-label="Desfazer importação" disabled={undo.isPending} onClick={() => confirm("Desfazer esta importação? Somente as medições geradas por este arquivo serão canceladas.") && undo.mutate(item.id)}><RotateCcw /></Button>}</div></td>
                   </tr>
                 );
               })}
-              {history.length === 0 && <tr><td colSpan={7} className="p-10 text-center text-muted-foreground">Nenhuma importação de medição registrada.</td></tr>}
+              {history.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">Nenhuma importação de medição registrada.</td></tr>}
             </tbody>
           </table>
         </div>
