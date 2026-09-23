@@ -12,6 +12,7 @@
 - [ ] Boletim móvel com arquivo privado, leitura multimodal, revisão humana e arquivo histórico
 - [ ] Medições por período, vínculo de boletins, preços, exportações, status, recebimento e atualização do painel
 - [x] Importação de XLSX/XLS/CSV/PDF, mapeamento, identificação por linha, distribuição por obra e histórico
+- [x] Validar a medição real de julho do Morro do Sabão no histórico e no comparativo (8 linhas, R$ 328.713,73)
 - [x] Validar obrigatórios, formatos, valores inconsistentes e duplicidades; detalhar medições importadas e permitir desfazer com segurança por arquivo
 - [ ] Comprovantes com IA, classificação determinística, distribuição por centro, duplicidade, histórico, busca textual, filtros por período/status e ordenação; validação do PDF real aguarda o arquivo
 - [x] Documentos da obra com envio múltiplo, progresso, busca, filtros, pré-visualização e permissões por papel
@@ -22,4 +23,4 @@
 - [x] Aplicar o logo enviado e sua paleta verde-grafite à identidade do sistema e ao ícone do navegador
 
 
-- [ ] Mover Comprovantes para uma seção geral fora das obras, mantendo compras de múltiplos locais.
+- [x] Mover Comprovantes para uma seção geral fora das obras, mantendo compras de múltiplos locais.
