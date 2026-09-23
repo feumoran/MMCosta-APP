@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
 import { Route as AuthenticatedObrasIdSecaoRouteImport } from './routes/_authenticated/obras/$id/$secao'
 import { Route as AuthenticatedObrasIdPainelRouteImport } from './routes/_authenticated/obras/$id/painel'
@@ -29,6 +30,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
+  id: '/cadastros',
+  path: '/cadastros',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedVisaoGeralRoute = AuthenticatedVisaoGeralRouteImport.update({
   id: '/visao-geral',
@@ -51,6 +57,7 @@ const AuthenticatedObrasIdPainelRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/_authenticated/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/_authenticated/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -74,14 +83,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/visao-geral' | '/obras/$id/$secao' | '/obras/$id/painel'
+    | '/'
+    | '/auth'
+    | '/cadastros'
+    | '/visao-geral'
+    | '/obras/$id/$secao'
+    | '/obras/$id/painel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/visao-geral' | '/obras/$id/$secao' | '/obras/$id/painel'
+  to:
+    | '/'
+    | '/auth'
+    | '/cadastros'
+    | '/visao-geral'
+    | '/obras/$id/$secao'
+    | '/obras/$id/painel'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cadastros'
     | '/_authenticated/visao-geral'
     | '/_authenticated/obras/$id/$secao'
     | '/_authenticated/obras/$id/painel'
@@ -116,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/cadastros': {
+      id: '/_authenticated/cadastros'
+      path: '/cadastros'
+      fullPath: '/cadastros'
+      preLoaderRoute: typeof AuthenticatedCadastrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/visao-geral': {
       id: '/_authenticated/visao-geral'
       path: '/visao-geral'
@@ -141,12 +169,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedVisaoGeralRoute: typeof AuthenticatedVisaoGeralRoute
   AuthenticatedObrasIdSecaoRoute: typeof AuthenticatedObrasIdSecaoRoute
   AuthenticatedObrasIdPainelRoute: typeof AuthenticatedObrasIdPainelRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedVisaoGeralRoute: AuthenticatedVisaoGeralRoute,
   AuthenticatedObrasIdSecaoRoute: AuthenticatedObrasIdSecaoRoute,
   AuthenticatedObrasIdPainelRoute: AuthenticatedObrasIdPainelRoute,
