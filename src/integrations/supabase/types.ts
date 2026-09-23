@@ -562,6 +562,63 @@ export type Database = {
           },
         ]
       }
+      precos_servico: {
+        Row: {
+          categoria: Database["public"]["Enums"]["categoria_perfuracao"] | null
+          created_at: string
+          created_by: string | null
+          eh_exemplo: boolean
+          id: string
+          obra_id: string | null
+          preco: number
+          servico_id: string
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["categoria_perfuracao"] | null
+          created_at?: string
+          created_by?: string | null
+          eh_exemplo?: boolean
+          id?: string
+          obra_id?: string | null
+          preco: number
+          servico_id: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["categoria_perfuracao"] | null
+          created_at?: string
+          created_by?: string | null
+          eh_exemplo?: boolean
+          id?: string
+          obra_id?: string | null
+          preco?: number
+          servico_id?: string
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precos_servico_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precos_servico_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -585,6 +642,45 @@ export type Database = {
           email?: string
           id?: string
           nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          eh_perfuracao: boolean
+          id: string
+          nome: string
+          palavras_chave: string[]
+          tipo_medicao: Database["public"]["Enums"]["tipo_medicao_servico"]
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          eh_perfuracao?: boolean
+          id?: string
+          nome: string
+          palavras_chave?: string[]
+          tipo_medicao?: Database["public"]["Enums"]["tipo_medicao_servico"]
+          unidade: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          eh_perfuracao?: boolean
+          id?: string
+          nome?: string
+          palavras_chave?: string[]
+          tipo_medicao?: Database["public"]["Enums"]["tipo_medicao_servico"]
+          unidade?: string
           updated_at?: string
         }
         Relationships: []
@@ -621,6 +717,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buscar_preco: {
+        Args: {
+          _categoria: Database["public"]["Enums"]["categoria_perfuracao"]
+          _data: string
+          _obra: string
+          _servico: string
+        }
+        Returns: number
+      }
       can_field: { Args: never; Returns: boolean }
       can_manage: { Args: never; Returns: boolean }
       claim_first_admin: { Args: never; Returns: boolean }
@@ -634,9 +739,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "escritorio" | "engenharia" | "leitura"
+      categoria_perfuracao: "solo" | "rocha_alterada" | "rocha"
       centro_custo_tipo: "obra" | "administrativo"
       lancamento_tipo: "recebimento" | "pagamento"
       obra_status: "em_andamento" | "concluida" | "suspensa"
+      tipo_medicao_servico: "periodica" | "etapa_fechada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -765,9 +872,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "escritorio", "engenharia", "leitura"],
+      categoria_perfuracao: ["solo", "rocha_alterada", "rocha"],
       centro_custo_tipo: ["obra", "administrativo"],
       lancamento_tipo: ["recebimento", "pagamento"],
       obra_status: ["em_andamento", "concluida", "suspensa"],
+      tipo_medicao_servico: ["periodica", "etapa_fechada"],
     },
   },
 } as const
