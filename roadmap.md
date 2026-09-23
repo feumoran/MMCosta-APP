@@ -21,3 +21,5 @@
 - [ ] Verificação de cálculos, acessos, telas e segurança
 - [x] Aplicar o logo enviado e sua paleta verde-grafite à identidade do sistema e ao ícone do navegador
 
+
+- [ ] Mover Comprovantes para uma seção geral fora das obras, mantendo compras de múltiplos locais.
