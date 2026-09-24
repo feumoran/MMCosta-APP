@@ -32,3 +32,4 @@
 - [x] Limpar medições, arquivos importados e todos os dados dos painéis, mantendo os cadastros das obras
 - [x] Exibir salário, salário com encargos e diária na visão geral de Funcionários
 - [x] Ocultar a aba Categorias em Cadastros
+- [x] Incluir bônus mensal editável no total e no cálculo da diária dos funcionários
