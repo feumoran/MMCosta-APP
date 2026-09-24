@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedComprovantesRouteImport } from './routes/_authenticated/comprovantes'
+import { Route as AuthenticatedFuncionariosRouteImport } from './routes/_authenticated/funcionarios'
 import { Route as AuthenticatedRegistroAlteracoesRouteImport } from './routes/_authenticated/registro-alteracoes'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
 import { Route as ApiLerBoletimRouteImport } from './routes/api/ler-boletim'
@@ -53,6 +54,12 @@ const AuthenticatedComprovantesRoute =
   AuthenticatedComprovantesRouteImport.update({
     id: '/comprovantes',
     path: '/comprovantes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFuncionariosRoute =
+  AuthenticatedFuncionariosRouteImport.update({
+    id: '/funcionarios',
+    path: '/funcionarios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRegistroAlteracoesRoute =
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
@@ -120,6 +128,7 @@ export interface FileRoutesByTo {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
@@ -137,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/_authenticated/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/_authenticated/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/_authenticated/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
   '/api/ler-boletim': typeof ApiLerBoletimRoute
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
+    | '/funcionarios'
     | '/registro-alteracoes'
     | '/visao-geral'
     | '/api/ler-boletim'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
+    | '/funcionarios'
     | '/registro-alteracoes'
     | '/visao-geral'
     | '/api/ler-boletim'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros'
     | '/_authenticated/centros-custo'
     | '/_authenticated/comprovantes'
+    | '/_authenticated/funcionarios'
     | '/_authenticated/registro-alteracoes'
     | '/_authenticated/visao-geral'
     | '/api/ler-boletim'
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/comprovantes'
       fullPath: '/comprovantes'
       preLoaderRoute: typeof AuthenticatedComprovantesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/funcionarios': {
+      id: '/_authenticated/funcionarios'
+      path: '/funcionarios'
+      fullPath: '/funcionarios'
+      preLoaderRoute: typeof AuthenticatedFuncionariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/registro-alteracoes': {
@@ -311,6 +331,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
   AuthenticatedComprovantesRoute: typeof AuthenticatedComprovantesRoute
+  AuthenticatedFuncionariosRoute: typeof AuthenticatedFuncionariosRoute
   AuthenticatedRegistroAlteracoesRoute: typeof AuthenticatedRegistroAlteracoesRoute
   AuthenticatedVisaoGeralRoute: typeof AuthenticatedVisaoGeralRoute
   AuthenticatedObrasIndexRoute: typeof AuthenticatedObrasIndexRoute
@@ -322,6 +343,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
   AuthenticatedComprovantesRoute: AuthenticatedComprovantesRoute,
+  AuthenticatedFuncionariosRoute: AuthenticatedFuncionariosRoute,
   AuthenticatedRegistroAlteracoesRoute: AuthenticatedRegistroAlteracoesRoute,
   AuthenticatedVisaoGeralRoute: AuthenticatedVisaoGeralRoute,
   AuthenticatedObrasIndexRoute: AuthenticatedObrasIndexRoute,
