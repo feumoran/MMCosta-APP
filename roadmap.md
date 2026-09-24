@@ -1,6 +1,7 @@
 # Roadmap — ERP MMcosta
 
 ## Etapa 1 — fundação solicitada
+- [x] Corrigir convites de usuários, boletins parciais e completar ações dos cadastros
 - [x] Incorporar a importação do cliente dentro de Medições e criar o comparativo entre medição interna e recebida
 - [x] Reorganizar o topo: Visão geral como início, logo voltando ao início e nova área Obras com os acessos por obra
 - [ ] Cloud, autenticação por e-mail, primeiro administrador e gestão de usuários
