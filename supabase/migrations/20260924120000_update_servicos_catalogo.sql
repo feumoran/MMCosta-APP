@@ -37,9 +37,12 @@ INSERT INTO public.servicos (id,nome,unidade,eh_perfuracao,tipo_medicao,palavras
 ON CONFLICT (id) DO UPDATE SET nome=EXCLUDED.nome, unidade=EXCLUDED.unidade, eh_perfuracao=EXCLUDED.eh_perfuracao, tipo_medicao=EXCLUDED.tipo_medicao, palavras_chave=EXCLUDED.palavras_chave, ativo=true;
 
 -- Preços de exemplo do novo catálogo (seção 9 do Knowledge) — a tela deve avisar enquanto eh_exemplo=true.
-INSERT INTO public.precos_servico (servico_id,categoria,preco,vigencia_inicio,eh_exemplo) VALUES
-('60000000-0000-0000-0000-000000000006',NULL,32.00,CURRENT_DATE,true),
-('60000000-0000-0000-0000-000000000007',NULL,0.45,CURRENT_DATE,true),
-('60000000-0000-0000-0000-000000000008',NULL,4.80,CURRENT_DATE,true),
-('60000000-0000-0000-0000-000000000009',NULL,980.00,CURRENT_DATE,true),
-('60000000-0000-0000-0000-00000000000a',NULL,18.00,CURRENT_DATE,true);
+INSERT INTO public.precos_servico (servico_id,categoria,preco,vigencia_inicio,eh_exemplo)
+SELECT v.servico_id::uuid, NULL, v.preco, CURRENT_DATE, true FROM (VALUES
+('60000000-0000-0000-0000-000000000006',32.00),
+('60000000-0000-0000-0000-000000000007',0.45),
+('60000000-0000-0000-0000-000000000008',4.80),
+('60000000-0000-0000-0000-000000000009',980.00),
+('60000000-0000-0000-0000-00000000000a',18.00)
+) AS v(servico_id,preco)
+WHERE NOT EXISTS (SELECT 1 FROM public.precos_servico p WHERE p.servico_id = v.servico_id::uuid AND p.obra_id IS NULL AND p.vigencia_fim IS NULL);

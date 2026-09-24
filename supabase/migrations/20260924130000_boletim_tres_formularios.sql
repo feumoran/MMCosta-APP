@@ -1,18 +1,19 @@
 -- Fase 2 — Reestrutura o boletim para os três formulários de papel reais da MMcosta
 -- (Estaca Raiz, Injeção/Tirante, Concreto Projetado), substituindo o modelo genérico.
 
-CREATE TYPE public.boletim_tipo AS ENUM ('estaca_raiz','injecao_tirante','concreto_projetado');
-CREATE TYPE public.boletim_item_origem AS ENUM ('trecho_perfuracao','injecao_estaca','injecao_tirante','material_concreto');
+DO $$ BEGIN CREATE TYPE public.boletim_tipo AS ENUM ('estaca_raiz','injecao_tirante','concreto_projetado'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE public.boletim_item_origem AS ENUM ('trecho_perfuracao','injecao_estaca','injecao_tirante','material_concreto'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Cabeçalho comum: adapta a tabela genérica existente para o novo modelo.
-ALTER TABLE public.boletins ADD COLUMN tipo public.boletim_tipo;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS tipo public.boletim_tipo;
 UPDATE public.boletins SET tipo='estaca_raiz' WHERE tipo IS NULL;
 ALTER TABLE public.boletins ALTER COLUMN tipo SET NOT NULL;
-ALTER TABLE public.boletins ADD COLUMN contratante text;
-ALTER TABLE public.boletins ADD COLUMN local text;
-ALTER TABLE public.boletins ADD COLUMN encarregado text;
-ALTER TABLE public.boletins ADD COLUMN revisado_por uuid;
-ALTER TABLE public.boletins RENAME COLUMN confirmado_em TO revisado_em;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS contratante text;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS local text;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS encarregado text;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS revisado_por uuid;
+DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boletins' AND column_name='confirmado_em') AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boletins' AND column_name='revisado_em') THEN ALTER TABLE public.boletins RENAME COLUMN confirmado_em TO revisado_em; END IF; END $$;
+ALTER TABLE public.boletins ADD COLUMN IF NOT EXISTS revisado_em timestamptz;
 ALTER TABLE public.boletins DROP COLUMN IF EXISTS horas_trabalhadas;
 ALTER TABLE public.boletins DROP COLUMN IF EXISTS horas_paradas;
 ALTER TABLE public.boletins DROP COLUMN IF EXISTS motivo_parada;
@@ -21,10 +22,10 @@ ALTER TABLE public.boletins DROP COLUMN IF EXISTS equipe_texto;
 ALTER TABLE public.boletins ALTER COLUMN equipamento_id DROP NOT NULL;
 ALTER TABLE public.boletins ALTER COLUMN equipe_id DROP NOT NULL;
 
-ALTER TABLE public.boletim_itens ADD COLUMN origem public.boletim_item_origem;
+ALTER TABLE public.boletim_itens ADD COLUMN IF NOT EXISTS origem public.boletim_item_origem;
 
 -- Boletim de Estaca Raiz -------------------------------------------------
-CREATE TABLE public.boletim_estaca (
+CREATE TABLE IF NOT EXISTS public.boletim_estaca (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   boletim_id uuid NOT NULL UNIQUE REFERENCES public.boletins(id) ON DELETE CASCADE,
   apoio_encontro text,
@@ -61,13 +62,18 @@ CREATE TABLE public.boletim_estaca (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.boletim_estaca TO authenticated;
 GRANT ALL ON public.boletim_estaca TO service_role;
 ALTER TABLE public.boletim_estaca ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS boletim_estaca_read ON public.boletim_estaca;
 CREATE POLICY boletim_estaca_read ON public.boletim_estaca FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS boletim_estaca_insert ON public.boletim_estaca;
 CREATE POLICY boletim_estaca_insert ON public.boletim_estaca FOR INSERT TO authenticated WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_estaca_update ON public.boletim_estaca;
 CREATE POLICY boletim_estaca_update ON public.boletim_estaca FOR UPDATE TO authenticated USING (public.can_field()) WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_estaca_delete ON public.boletim_estaca;
 CREATE POLICY boletim_estaca_delete ON public.boletim_estaca FOR DELETE TO authenticated USING (public.can_manage());
+DROP TRIGGER IF EXISTS set_boletim_estaca_updated ON public.boletim_estaca;
 CREATE TRIGGER set_boletim_estaca_updated BEFORE UPDATE ON public.boletim_estaca FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TABLE public.boletim_estaca_trecho (
+CREATE TABLE IF NOT EXISTS public.boletim_estaca_trecho (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   boletim_estaca_id uuid NOT NULL REFERENCES public.boletim_estaca(id) ON DELETE CASCADE,
   ordem integer NOT NULL DEFAULT 0,
@@ -84,15 +90,20 @@ CREATE TABLE public.boletim_estaca_trecho (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.boletim_estaca_trecho TO authenticated;
 GRANT ALL ON public.boletim_estaca_trecho TO service_role;
 ALTER TABLE public.boletim_estaca_trecho ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS boletim_estaca_trecho_read ON public.boletim_estaca_trecho;
 CREATE POLICY boletim_estaca_trecho_read ON public.boletim_estaca_trecho FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS boletim_estaca_trecho_insert ON public.boletim_estaca_trecho;
 CREATE POLICY boletim_estaca_trecho_insert ON public.boletim_estaca_trecho FOR INSERT TO authenticated WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_estaca_trecho_update ON public.boletim_estaca_trecho;
 CREATE POLICY boletim_estaca_trecho_update ON public.boletim_estaca_trecho FOR UPDATE TO authenticated USING (public.can_field()) WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_estaca_trecho_delete ON public.boletim_estaca_trecho;
 CREATE POLICY boletim_estaca_trecho_delete ON public.boletim_estaca_trecho FOR DELETE TO authenticated USING (public.can_field());
+DROP TRIGGER IF EXISTS set_boletim_estaca_trecho_updated ON public.boletim_estaca_trecho;
 CREATE TRIGGER set_boletim_estaca_trecho_updated BEFORE UPDATE ON public.boletim_estaca_trecho FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE INDEX boletim_estaca_trecho_idx ON public.boletim_estaca_trecho(boletim_estaca_id, ordem);
+CREATE INDEX IF NOT EXISTS boletim_estaca_trecho_idx ON public.boletim_estaca_trecho(boletim_estaca_id, ordem);
 
 -- Boletim de Injeção (Tirante) --------------------------------------------
-CREATE TABLE public.boletim_tirante (
+CREATE TABLE IF NOT EXISTS public.boletim_tirante (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   boletim_id uuid NOT NULL UNIQUE REFERENCES public.boletins(id) ON DELETE CASCADE,
   perfuracao_data date,
@@ -125,13 +136,18 @@ CREATE TABLE public.boletim_tirante (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.boletim_tirante TO authenticated;
 GRANT ALL ON public.boletim_tirante TO service_role;
 ALTER TABLE public.boletim_tirante ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS boletim_tirante_read ON public.boletim_tirante;
 CREATE POLICY boletim_tirante_read ON public.boletim_tirante FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS boletim_tirante_insert ON public.boletim_tirante;
 CREATE POLICY boletim_tirante_insert ON public.boletim_tirante FOR INSERT TO authenticated WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_tirante_update ON public.boletim_tirante;
 CREATE POLICY boletim_tirante_update ON public.boletim_tirante FOR UPDATE TO authenticated USING (public.can_field()) WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_tirante_delete ON public.boletim_tirante;
 CREATE POLICY boletim_tirante_delete ON public.boletim_tirante FOR DELETE TO authenticated USING (public.can_manage());
+DROP TRIGGER IF EXISTS set_boletim_tirante_updated ON public.boletim_tirante;
 CREATE TRIGGER set_boletim_tirante_updated BEFORE UPDATE ON public.boletim_tirante FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TABLE public.boletim_tirante_fase (
+CREATE TABLE IF NOT EXISTS public.boletim_tirante_fase (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   boletim_tirante_id uuid NOT NULL REFERENCES public.boletim_tirante(id) ON DELETE CASCADE,
   fase_numero smallint NOT NULL CHECK (fase_numero BETWEEN 1 AND 3),
@@ -146,14 +162,19 @@ CREATE TABLE public.boletim_tirante_fase (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.boletim_tirante_fase TO authenticated;
 GRANT ALL ON public.boletim_tirante_fase TO service_role;
 ALTER TABLE public.boletim_tirante_fase ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS boletim_tirante_fase_read ON public.boletim_tirante_fase;
 CREATE POLICY boletim_tirante_fase_read ON public.boletim_tirante_fase FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS boletim_tirante_fase_insert ON public.boletim_tirante_fase;
 CREATE POLICY boletim_tirante_fase_insert ON public.boletim_tirante_fase FOR INSERT TO authenticated WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_tirante_fase_update ON public.boletim_tirante_fase;
 CREATE POLICY boletim_tirante_fase_update ON public.boletim_tirante_fase FOR UPDATE TO authenticated USING (public.can_field()) WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_tirante_fase_delete ON public.boletim_tirante_fase;
 CREATE POLICY boletim_tirante_fase_delete ON public.boletim_tirante_fase FOR DELETE TO authenticated USING (public.can_field());
+DROP TRIGGER IF EXISTS set_boletim_tirante_fase_updated ON public.boletim_tirante_fase;
 CREATE TRIGGER set_boletim_tirante_fase_updated BEFORE UPDATE ON public.boletim_tirante_fase FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- Boletim de Concreto Projetado --------------------------------------------
-CREATE TABLE public.boletim_concreto_item (
+CREATE TABLE IF NOT EXISTS public.boletim_concreto_item (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   boletim_id uuid NOT NULL REFERENCES public.boletins(id) ON DELETE CASCADE,
   ordem integer NOT NULL DEFAULT 0,
@@ -169,9 +190,14 @@ CREATE TABLE public.boletim_concreto_item (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.boletim_concreto_item TO authenticated;
 GRANT ALL ON public.boletim_concreto_item TO service_role;
 ALTER TABLE public.boletim_concreto_item ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS boletim_concreto_item_read ON public.boletim_concreto_item;
 CREATE POLICY boletim_concreto_item_read ON public.boletim_concreto_item FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS boletim_concreto_item_insert ON public.boletim_concreto_item;
 CREATE POLICY boletim_concreto_item_insert ON public.boletim_concreto_item FOR INSERT TO authenticated WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_concreto_item_update ON public.boletim_concreto_item;
 CREATE POLICY boletim_concreto_item_update ON public.boletim_concreto_item FOR UPDATE TO authenticated USING (public.can_field()) WITH CHECK (public.can_field());
+DROP POLICY IF EXISTS boletim_concreto_item_delete ON public.boletim_concreto_item;
 CREATE POLICY boletim_concreto_item_delete ON public.boletim_concreto_item FOR DELETE TO authenticated USING (public.can_field());
+DROP TRIGGER IF EXISTS set_boletim_concreto_item_updated ON public.boletim_concreto_item;
 CREATE TRIGGER set_boletim_concreto_item_updated BEFORE UPDATE ON public.boletim_concreto_item FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE INDEX boletim_concreto_item_idx ON public.boletim_concreto_item(boletim_id, ordem);
+CREATE INDEX IF NOT EXISTS boletim_concreto_item_idx ON public.boletim_concreto_item(boletim_id, ordem);
