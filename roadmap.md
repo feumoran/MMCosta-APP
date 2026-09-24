@@ -25,4 +25,4 @@
 
 
 - [x] Mover Comprovantes para uma seção geral fora das obras, mantendo compras de múltiplos locais.
-- [ ] Criar visão dos centros de custo de obra e administrativos, com totais e movimentações
+- [x] Criar visão dos centros de custo de obra e administrativos, com totais e movimentações
