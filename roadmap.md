@@ -29,6 +29,6 @@
 - [x] Substituir Equipes por Funcionários, com remuneração, encargos, documentos, alocação e custo diário nos centros de custo
 - [x] Reorganizar Comprovantes, Funcionários, Alterações e Serviços e preços
 - [x] Simplificar produtos e valores, limpar comprovantes e ajustar cargo e encargos dos funcionários
-- [ ] Limpar medições, arquivos importados e todos os dados dos painéis, mantendo os cadastros das obras
-- [ ] Exibir salário, salário com encargos e diária na visão geral de Funcionários
-- [ ] Ocultar a aba Categorias em Cadastros
+- [x] Limpar medições, arquivos importados e todos os dados dos painéis, mantendo os cadastros das obras
+- [x] Exibir salário, salário com encargos e diária na visão geral de Funcionários
+- [x] Ocultar a aba Categorias em Cadastros
