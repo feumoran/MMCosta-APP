@@ -748,7 +748,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
-          cargo?: string
+          cargo: string
           created_at?: string
           created_by?: string | null
           data_admissao: string
