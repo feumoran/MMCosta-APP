@@ -1,0 +1,1 @@
+ALTER FUNCTION public.gerar_custos_funcionarios(date,date) SECURITY INVOKER;
