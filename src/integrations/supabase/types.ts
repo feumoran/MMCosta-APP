@@ -682,6 +682,7 @@ export type Database = {
       }
       funcionario_remuneracoes: {
         Row: {
+          bonus_mensal: number
           created_at: string
           created_by: string | null
           decimo_terceiro_percentual: number
@@ -696,6 +697,7 @@ export type Database = {
           vigencia_inicio: string
         }
         Insert: {
+          bonus_mensal?: number
           created_at?: string
           created_by?: string | null
           decimo_terceiro_percentual?: number
@@ -710,6 +712,7 @@ export type Database = {
           vigencia_inicio: string
         }
         Update: {
+          bonus_mensal?: number
           created_at?: string
           created_by?: string | null
           decimo_terceiro_percentual?: number
