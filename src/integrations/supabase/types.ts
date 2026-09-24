@@ -491,6 +491,284 @@ export type Database = {
         }
         Relationships: []
       }
+      funcionario_alocacoes: {
+        Row: {
+          centro_custo_id: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string
+          funcionario_id: string
+          id: string
+          obra_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          centro_custo_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          funcionario_id: string
+          id?: string
+          obra_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          centro_custo_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          funcionario_id?: string
+          id?: string
+          obra_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionario_alocacoes_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_alocacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_alocacoes_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionario_custos_diarios: {
+        Row: {
+          alocacao_id: string | null
+          centro_custo_id: string
+          created_at: string
+          created_by: string | null
+          custo_mensal: number
+          data: string
+          dias_uteis_mes: number
+          funcionario_id: string
+          id: string
+          obra_id: string | null
+          remuneracao_id: string
+          updated_at: string
+          valor_diaria: number
+        }
+        Insert: {
+          alocacao_id?: string | null
+          centro_custo_id: string
+          created_at?: string
+          created_by?: string | null
+          custo_mensal: number
+          data: string
+          dias_uteis_mes: number
+          funcionario_id: string
+          id?: string
+          obra_id?: string | null
+          remuneracao_id: string
+          updated_at?: string
+          valor_diaria: number
+        }
+        Update: {
+          alocacao_id?: string | null
+          centro_custo_id?: string
+          created_at?: string
+          created_by?: string | null
+          custo_mensal?: number
+          data?: string
+          dias_uteis_mes?: number
+          funcionario_id?: string
+          id?: string
+          obra_id?: string | null
+          remuneracao_id?: string
+          updated_at?: string
+          valor_diaria?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionario_custos_diarios_alocacao_id_fkey"
+            columns: ["alocacao_id"]
+            isOneToOne: false
+            referencedRelation: "funcionario_alocacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_custos_diarios_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_custos_diarios_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_custos_diarios_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funcionario_custos_diarios_remuneracao_id_fkey"
+            columns: ["remuneracao_id"]
+            isOneToOne: false
+            referencedRelation: "funcionario_remuneracoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionario_documentos: {
+        Row: {
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          categoria: Database["public"]["Enums"]["funcionario_documento_categoria"]
+          created_at: string
+          created_by: string | null
+          funcionario_id: string
+          id: string
+          tamanho_bytes: number
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          categoria: Database["public"]["Enums"]["funcionario_documento_categoria"]
+          created_at?: string
+          created_by?: string | null
+          funcionario_id: string
+          id?: string
+          tamanho_bytes: number
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_path?: string
+          arquivo_tipo?: string
+          categoria?: Database["public"]["Enums"]["funcionario_documento_categoria"]
+          created_at?: string
+          created_by?: string | null
+          funcionario_id?: string
+          id?: string
+          tamanho_bytes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionario_documentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionario_remuneracoes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          decimo_terceiro_percentual: number
+          ferias_percentual: number
+          fgts_percentual: number
+          funcionario_id: string
+          id: string
+          inss_percentual: number
+          salario_mensal: number
+          updated_at: string
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          decimo_terceiro_percentual?: number
+          ferias_percentual?: number
+          fgts_percentual?: number
+          funcionario_id: string
+          id?: string
+          inss_percentual?: number
+          salario_mensal: number
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          decimo_terceiro_percentual?: number
+          ferias_percentual?: number
+          fgts_percentual?: number
+          funcionario_id?: string
+          id?: string
+          inss_percentual?: number
+          salario_mensal?: number
+          updated_at?: string
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionario_remuneracoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          data_admissao: string
+          data_desligamento: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_admissao: string
+          data_desligamento?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_admissao?: string
+          data_desligamento?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       importacoes: {
         Row: {
           arquivo_nome: string
@@ -1159,6 +1437,11 @@ export type Database = {
         Args: { _importacao: string }
         Returns: number
       }
+      dias_uteis_no_mes: { Args: { _data: string }; Returns: number }
+      gerar_custos_funcionarios: {
+        Args: { _data_fim?: string; _data_inicio?: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1179,6 +1462,12 @@ export type Database = {
         | "art_rrt"
         | "laudo_tecnico"
         | "nota_fiscal"
+        | "outros"
+      funcionario_documento_categoria:
+        | "pessoal"
+        | "contrato"
+        | "mr"
+        | "aso"
         | "outros"
       importacao_status:
         | "processando"
@@ -1334,6 +1623,13 @@ export const Constants = {
         "art_rrt",
         "laudo_tecnico",
         "nota_fiscal",
+        "outros",
+      ],
+      funcionario_documento_categoria: [
+        "pessoal",
+        "contrato",
+        "mr",
+        "aso",
         "outros",
       ],
       importacao_status: [
