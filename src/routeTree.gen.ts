@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
+import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedComprovantesRouteImport } from './routes/_authenticated/comprovantes'
 import { Route as AuthenticatedRegistroAlteracoesRouteImport } from './routes/_authenticated/registro-alteracoes'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
@@ -42,6 +43,12 @@ const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
   path: '/cadastros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCentrosCustoRoute =
+  AuthenticatedCentrosCustoRouteImport.update({
+    id: '/centros-custo',
+    path: '/centros-custo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedComprovantesRoute =
   AuthenticatedComprovantesRouteImport.update({
     id: '/comprovantes',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
+  '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
+  '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
+  '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/_authenticated/comprovantes': typeof AuthenticatedComprovantesRoute
   '/_authenticated/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cadastros'
+    | '/centros-custo'
     | '/comprovantes'
     | '/registro-alteracoes'
     | '/visao-geral'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cadastros'
+    | '/centros-custo'
     | '/comprovantes'
     | '/registro-alteracoes'
     | '/visao-geral'
@@ -171,6 +183,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/cadastros'
+    | '/_authenticated/centros-custo'
     | '/_authenticated/comprovantes'
     | '/_authenticated/registro-alteracoes'
     | '/_authenticated/visao-geral'
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/cadastros'
       fullPath: '/cadastros'
       preLoaderRoute: typeof AuthenticatedCadastrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/centros-custo': {
+      id: '/_authenticated/centros-custo'
+      path: '/centros-custo'
+      fullPath: '/centros-custo'
+      preLoaderRoute: typeof AuthenticatedCentrosCustoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/comprovantes': {
@@ -289,6 +309,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
+  AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
   AuthenticatedComprovantesRoute: typeof AuthenticatedComprovantesRoute
   AuthenticatedRegistroAlteracoesRoute: typeof AuthenticatedRegistroAlteracoesRoute
   AuthenticatedVisaoGeralRoute: typeof AuthenticatedVisaoGeralRoute
@@ -299,6 +320,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
+  AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
   AuthenticatedComprovantesRoute: AuthenticatedComprovantesRoute,
   AuthenticatedRegistroAlteracoesRoute: AuthenticatedRegistroAlteracoesRoute,
   AuthenticatedVisaoGeralRoute: AuthenticatedVisaoGeralRoute,
