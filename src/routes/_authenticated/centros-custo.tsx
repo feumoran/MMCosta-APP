@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Landmark, Search } from "lucide-react";
+import { Building2, Landmark, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, dateBR } from "@/lib/erp";
@@ -27,6 +27,9 @@ function CostCentersPage() {
   const [selectedId, setSelectedId] = useState(centro ?? "");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<CenterFilter>("todos");
+  const monthStart = new Date(); monthStart.setDate(1);
+  const [dateFrom, setDateFrom] = useState(monthStart.toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10));
   const access = useQuery({ queryKey: ["cost-centers-access"], queryFn: async () => {
     const { data, error } = await supabase.rpc("can_manage");
     if (error) throw error;
@@ -36,13 +39,15 @@ function CostCentersPage() {
     queryKey: ["cost-centers-details"],
     enabled: access.data === true,
     queryFn: async () => {
-      const [{ data: centers, error: centersError }, { data: entries, error: entriesError }, { data: categories, error: categoriesError }] = await Promise.all([
+      const [{ data: centers, error: centersError }, { data: entries, error: entriesError }, { data: categories, error: categoriesError }, { data: employeeCosts, error: costsError }, { data: employees, error: employeesError }] = await Promise.all([
         supabase.from("centros_custo").select("id,nome,tipo,obra_id,ativo,obras(nome)").order("tipo").order("nome"),
         supabase.from("lancamentos").select("id,centro_custo_id,obra_id,data,tipo,categoria,descricao,valor,obras(nome)").is("deleted_at", null).order("data", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("categorias_lancamento").select("id,nome"),
+        supabase.from("funcionario_custos_diarios").select("id,centro_custo_id,obra_id,funcionario_id,data,valor_diaria").order("data", { ascending: false }),
+        supabase.from("funcionarios").select("id,nome"),
       ]);
-      if (centersError || entriesError || categoriesError) throw centersError ?? entriesError ?? categoriesError;
-      return { centers: centers ?? [], entries: entries ?? [], categories: categories ?? [] };
+      if (centersError || entriesError || categoriesError || costsError || employeesError) throw centersError ?? entriesError ?? categoriesError ?? costsError ?? employeesError;
+      return { centers: centers ?? [], entries: entries ?? [], categories: categories ?? [], employeeCosts: employeeCosts ?? [], employees: employees ?? [] };
     },
   });
   const visibleCenters = useMemo(() => (query.data?.centers ?? []).filter((item) => {
@@ -51,11 +56,14 @@ function CostCentersPage() {
     return matchesType && (!term || item.nome.toLocaleLowerCase("pt-BR").includes(term) || item.obras?.nome?.toLocaleLowerCase("pt-BR").includes(term));
   }), [filter, query.data?.centers, search]);
   const selected = query.data?.centers.find((item) => item.id === selectedId) ?? visibleCenters[0];
-  const allEntries = query.data?.entries ?? [];
+  const allEntries = (query.data?.entries ?? []).filter((item) => item.data >= dateFrom && item.data <= dateTo);
+  const allEmployeeCosts = (query.data?.employeeCosts ?? []).filter((item) => item.data >= dateFrom && item.data <= dateTo);
   const categories = query.data?.categories ?? [];
   const entries = selected ? allEntries.filter((item) => item.centro_custo_id === selected.id) : [];
+  const employeeCosts = selected ? allEmployeeCosts.filter((item) => item.centro_custo_id === selected.id) : [];
   const received = entries.filter((item) => item.tipo === "recebimento").reduce((total, item) => total + Number(item.valor), 0);
-  const paid = entries.filter((item) => item.tipo === "pagamento").reduce((total, item) => total + Number(item.valor), 0);
+  const teamPaid = employeeCosts.reduce((total, item) => total + Number(item.valor_diaria), 0);
+  const paid = entries.filter((item) => item.tipo === "pagamento").reduce((total, item) => total + Number(item.valor), 0) + teamPaid;
 
   if (access.isLoading) return <p className="text-sm text-muted-foreground">Verificando acesso…</p>;
   if (access.error) return <p className="text-sm text-destructive">Não foi possível verificar seu acesso.</p>;
