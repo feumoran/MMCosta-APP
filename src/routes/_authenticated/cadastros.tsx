@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus,Power,Trash2,UserPlus,AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";import type { Database } from "@/integrations/supabase/types";
-import { inviteUser,removeUser,updateUserRole } from "@/lib/users.functions";
+import { inviteUser,listUsers,removeUser,updateUserRole } from "@/lib/users.functions";
 import { brl } from "@/lib/erp";
 import { Button } from "@/components/ui/button";import { Input } from "@/components/ui/input";import { Select,SelectContent,SelectItem,SelectTrigger,SelectValue } from "@/components/ui/select";import { Tabs,TabsContent,TabsList,TabsTrigger } from "@/components/ui/tabs";
 export const Route=createFileRoute("/_authenticated/cadastros")({head:()=>({meta:[{title:"Cadastros | MMcosta Engenharia"},{name:"description",content:"Clientes, obras, recursos, centros de custo e usuários."},{property:"og:title",content:"Cadastros | MMcosta"},{property:"og:description",content:"Cadastros operacionais da MMcosta Engenharia."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),component:Registers});
