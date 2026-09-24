@@ -28,3 +28,4 @@
 - [x] Criar visão dos centros de custo de obra e administrativos, com totais e movimentações
 - [x] Substituir Equipes por Funcionários, com remuneração, encargos, documentos, alocação e custo diário nos centros de custo
 - [x] Reorganizar Comprovantes, Funcionários, Alterações e Serviços e preços
+- [x] Simplificar produtos e valores, limpar comprovantes e ajustar cargo e encargos dos funcionários
