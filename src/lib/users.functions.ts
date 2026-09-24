@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const roleSchema=z.enum(["admin","escritorio","engenharia","leitura"]);
 const input=z.object({email:z.string().email(),nome:z.string().min(2),role:roleSchema});
 const userInput=z.object({userId:z.string().uuid(),role:roleSchema});
+const passwordInput=z.object({userId:z.string().uuid(),password:z.string().min(8,"A senha deve ter pelo menos 8 caracteres.").max(72)});
 async function assertAdmin(context:{supabase:any;userId:string}){const {data,error}=await context.supabase.rpc("has_role",{_user_id:context.userId,_role:"admin"});if(error||!data)throw new Error("Apenas administradores podem gerenciar usuários.")}
 export const inviteUser=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator((data)=>input.parse(data)).handler(async({data,context})=>{
  await assertAdmin(context);
@@ -22,6 +23,8 @@ export const inviteUser=createServerFn({method:"POST"}).middleware([requireSupab
 });
 
 export const updateUserRole=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator((data)=>userInput.parse(data)).handler(async({data,context})=>{await assertAdmin(context);const {supabaseAdmin}=await import("@/integrations/supabase/client.server");const {error:removeError}=await supabaseAdmin.from("user_roles").delete().eq("user_id",data.userId);if(removeError)throw removeError;const {error}=await supabaseAdmin.from("user_roles").insert({user_id:data.userId,role:data.role,created_by:context.userId});if(error)throw error;return{ok:true}});
+
+export const updateUserPassword=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator((data)=>passwordInput.parse(data)).handler(async({data,context})=>{await assertAdmin(context);const {supabaseAdmin}=await import("@/integrations/supabase/client.server");const {error}=await supabaseAdmin.auth.admin.updateUserById(data.userId,{password:data.password});if(error)throw new Error(`Não foi possível definir a nova senha: ${error.message}`);return{ok:true}});
 
 export const removeUser=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator((data)=>z.object({userId:z.string().uuid()}).parse(data)).handler(async({data,context})=>{await assertAdmin(context);if(data.userId===context.userId)throw new Error("Você não pode excluir seu próprio usuário.");const {supabaseAdmin}=await import("@/integrations/supabase/client.server");const {error}=await supabaseAdmin.auth.admin.deleteUser(data.userId);if(error)throw error;const {error:roleError}=await supabaseAdmin.from("user_roles").delete().eq("user_id",data.userId);if(roleError)throw roleError;const {error:profileError}=await supabaseAdmin.from("profiles").delete().eq("id",data.userId);if(profileError)throw profileError;return{ok:true}});
 
