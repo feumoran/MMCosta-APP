@@ -26,3 +26,4 @@
 
 - [x] Mover Comprovantes para uma seção geral fora das obras, mantendo compras de múltiplos locais.
 - [x] Criar visão dos centros de custo de obra e administrativos, com totais e movimentações
+- [x] Substituir Equipes por Funcionários, com remuneração, encargos, documentos, alocação e custo diário nos centros de custo
