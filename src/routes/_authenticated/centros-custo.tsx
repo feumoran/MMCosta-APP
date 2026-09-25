@@ -27,9 +27,8 @@ function CostCentersPage() {
   const [selectedId, setSelectedId] = useState(centro ?? "");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<CenterFilter>("todos");
-  const monthStart = new Date(); monthStart.setDate(1);
-  const [dateFrom, setDateFrom] = useState(monthStart.toISOString().slice(0, 10));
-  const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const access = useQuery({ queryKey: ["cost-centers-access"], queryFn: async () => {
     const { data, error } = await supabase.rpc("can_manage");
     if (error) throw error;
@@ -38,6 +37,8 @@ function CostCentersPage() {
   const query = useQuery({
     queryKey: ["cost-centers-details"],
     enabled: access.data === true,
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const [{ data: centers, error: centersError }, { data: entries, error: entriesError }, { data: categories, error: categoriesError }, { data: employeeCosts, error: costsError }, { data: employees, error: employeesError }] = await Promise.all([
         supabase.from("centros_custo").select("id,nome,tipo,obra_id,ativo,obras(nome)").order("tipo").order("nome"),
@@ -56,8 +57,9 @@ function CostCentersPage() {
     return matchesType && (!term || item.nome.toLocaleLowerCase("pt-BR").includes(term) || item.obras?.nome?.toLocaleLowerCase("pt-BR").includes(term));
   }), [filter, query.data?.centers, search]);
   const selected = query.data?.centers.find((item) => item.id === selectedId) ?? visibleCenters[0];
-  const allEntries = (query.data?.entries ?? []).filter((item) => item.data >= dateFrom && item.data <= dateTo);
-  const allEmployeeCosts = (query.data?.employeeCosts ?? []).filter((item) => item.data >= dateFrom && item.data <= dateTo);
+  const inPeriod = (date: string) => (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo);
+  const allEntries = (query.data?.entries ?? []).filter((item) => inPeriod(item.data));
+  const allEmployeeCosts = (query.data?.employeeCosts ?? []).filter((item) => inPeriod(item.data));
   const categories = query.data?.categories ?? [];
   const entries = selected ? allEntries.filter((item) => item.centro_custo_id === selected.id) : [];
   const employeeCosts = selected ? allEmployeeCosts.filter((item) => item.centro_custo_id === selected.id) : [];
