@@ -610,6 +610,34 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
     onError: (caught) => toast.error(caught.message),
   });
 
+  const removeImport = useMutation({
+    mutationFn: async (item: { id: string; arquivo_path: string }) => {
+      const linked = data?.measurements.filter((measurement) => measurement.importacao_id === item.id) ?? [];
+      if (linked.some((measurement) => measurement.status === "recebida")) {
+        throw new Error("Há uma medição já recebida vinculada a este arquivo. Cancele o recebimento antes de excluir.");
+      }
+      const linkedIds = linked.map((measurement) => measurement.id);
+      if (linkedIds.length) {
+        const { error: itemsError } = await supabase.from("medicao_itens").delete().in("medicao_id", linkedIds);
+        if (itemsError) throw itemsError;
+        const { error: measurementsError } = await supabase.from("medicoes").delete().in("id", linkedIds);
+        if (measurementsError) throw measurementsError;
+      }
+      const { error: storageError } = await supabase.storage.from("importacoes").remove([item.arquivo_path]);
+      if (storageError) throw storageError;
+      const { error: importError } = await supabase.from("importacoes").delete().eq("id", item.id);
+      if (importError) throw importError;
+    },
+    onSuccess: () => {
+      toast.success("Importação excluída por completo: medições, registro e arquivo removidos.");
+      setDetail(null);
+      queryClient.invalidateQueries({ queryKey: ["measurement-imports"] });
+      queryClient.invalidateQueries({ queryKey: ["measurements"] });
+      queryClient.invalidateQueries({ queryKey: ["obra"] });
+    },
+    onError: (caught) => toast.error(caught instanceof Error ? caught.message : "Não foi possível excluir a importação."),
+  });
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando importações…</p>;
   if (error || !data) return <p className="text-sm text-destructive">Não foi possível carregar as importações.</p>;
   if (data.role !== "admin" && data.role !== "escritorio") {
@@ -775,7 +803,7 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
                     <td className="text-right font-mono font-semibold">{brl.format(item.valor_total)}</td>
                     <td className="max-w-xs"><span className="block truncate">{workNames.length ? workNames.join(", ") : "—"}</span><span className="text-xs text-muted-foreground">{linked.map((measurement) => `${data.works.find((work) => work.id === measurement.obra_id)?.nome ?? "Obra"} · medição ${measurement.numero} · ${measurement.status}`).join("; ") || "Sem medição vinculada"}</span></td>
                     <td><span className="bg-muted px-2 py-1 text-xs font-semibold">{item.status}</span></td>
-                    <td><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label="Ver detalhe" onClick={() => setDetail({ ...summary, id: item.id, arquivo: item.arquivo_nome, status: item.status, medicoes: linked })}><Eye /></Button><Button variant="ghost" size="icon" aria-label="Baixar original" onClick={() => void download(item.arquivo_path, item.arquivo_nome)}><Download /></Button>{item.status === "concluida" && <Button variant="ghost" size="icon" aria-label="Desfazer importação" disabled={undo.isPending} onClick={() => confirm("Desfazer esta importação? Somente as medições geradas por este arquivo serão canceladas.") && undo.mutate(item.id)}><RotateCcw /></Button>}</div></td>
+                    <td><div className="flex gap-1"><Button variant="ghost" size="icon" aria-label="Ver detalhe" onClick={() => setDetail({ ...summary, id: item.id, arquivo: item.arquivo_nome, status: item.status, medicoes: linked })}><Eye /></Button><Button variant="ghost" size="icon" aria-label="Baixar original" onClick={() => void download(item.arquivo_path, item.arquivo_nome)}><Download /></Button>{item.status === "concluida" && <Button variant="ghost" size="icon" aria-label="Desfazer importação" disabled={undo.isPending} onClick={() => confirm("Desfazer esta importação? Somente as medições geradas por este arquivo serão canceladas.") && undo.mutate(item.id)}><RotateCcw /></Button>}{data.role === "admin" && <Button variant="ghost" size="icon" aria-label="Excluir importação" disabled={removeImport.isPending} onClick={() => confirm("Excluir este arquivo por completo? As medições geradas por ele, o registro do histórico e o arquivo original serão removidos. Não dá para desfazer.") && removeImport.mutate({ id: item.id, arquivo_path: item.arquivo_path })}><Trash2 /></Button>}</div></td>
                   </tr>
                 );
               })}
