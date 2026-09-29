@@ -9,7 +9,7 @@ async function assertAdmin(context:{supabase:any;userId:string}){const {data,err
 export const inviteUser=createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator((data)=>input.parse(data)).handler(async({data,context})=>{
  await assertAdmin(context);
  const {supabaseAdmin}=await import("@/integrations/supabase/client.server");
- const origin=process.env['APP_URL']??"https://mmcosta-app.lovable.app";
+ const origin=process.env['APP_URL']??"https://mmcosta.lovable.app";
  const email=data.email.trim().toLowerCase();
  let userId:string|undefined;
  const {data:invited,error:inviteError}=await supabaseAdmin.auth.admin.inviteUserByEmail(email,{redirectTo:`${origin}/auth`,data:{nome:data.nome}});
