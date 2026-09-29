@@ -25,7 +25,7 @@ const emptyPay = () => ({ salario_mensal: "", bonus_mensal: "", vigencia_inicio:
 const encargos = { inss_percentual: 12, fgts_percentual: 8, ferias_percentual: 11.11, decimo_terceiro_percentual: 8.33 } as const;
 const percentualEncargos = Object.values(encargos).reduce((total, valor) => total + valor, 0);
 const numberBR = (value: string) => Number(value.replace(/\./g, "").replace(",", "."));
-const businessDays = (date: Date) => { let count=0;for(let day=new Date(date.getFullYear(),date.getMonth(),1);day.getMonth()===date.getMonth();day.setDate(day.getDate()+1)){if(day.getDay()!==0&&day.getDay()!==6)count++;}return count; };
+const businessDays = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
 const moneyBR = (cents: number) => (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function MoneyInput({ value, onChange, required, disabled }: { value: string; onChange: (value: string) => void; required?: boolean; disabled?: boolean }) {
