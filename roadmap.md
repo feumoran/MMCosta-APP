@@ -34,3 +34,4 @@
 - [x] Ocultar a aba Categorias em Cadastros
 - [x] Incluir bônus mensal editável no total e no cálculo da diária dos funcionários
 - [x] Aplicar as migrações de permissões do RH, remoção do funcionário teste e exclusão de custos; manter a limpeza geral pendente
+- [x] Corrigir a Curva S para incluir marcos finais e concluir automaticamente obras com 100% de avanço
