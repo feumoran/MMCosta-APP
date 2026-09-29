@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Authentication emails use the managed `/lovable/email/auth/*` routes and shared MMcosta templates, because delivery and branding must remain consistent.
