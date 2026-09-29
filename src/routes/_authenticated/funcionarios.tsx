@@ -22,15 +22,16 @@ function EmployeesPage() {
     queryKey: ["employees-access"],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return { admin: false, canManage: false };
-      const [{ data: admin }, { data: canManage }] = await Promise.all([
+      if (!user.user) return { admin: false, canManage: false, canSalary: false };
+      const [{ data: admin }, { data: canManageBase }, { data: rh }] = await Promise.all([
         supabase.rpc("has_role", { _user_id: user.user.id, _role: "admin" }),
         supabase.rpc("can_manage"),
+        supabase.rpc("has_role", { _user_id: user.user.id, _role: "engenharia" }),
       ]);
-      return { admin: Boolean(admin), canManage: Boolean(canManage) };
+      return { admin: Boolean(admin), canManage: Boolean(canManageBase) || Boolean(rh), canSalary: Boolean(admin) || Boolean(rh) };
     },
   });
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando funcionários…</p>;
-  return <Employees canManage={Boolean(access?.canManage)} canAdmin={Boolean(access?.admin)} />;
+  return <Employees canManage={Boolean(access?.canManage)} canSalary={Boolean(access?.canSalary)} canAdmin={Boolean(access?.admin)} />;
 }
