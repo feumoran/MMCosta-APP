@@ -33,3 +33,4 @@
 - [x] Exibir salário, salário com encargos e diária na visão geral de Funcionários
 - [x] Ocultar a aba Categorias em Cadastros
 - [x] Incluir bônus mensal editável no total e no cálculo da diária dos funcionários
+- [x] Aplicar as migrações de permissões do RH, remoção do funcionário teste e exclusão de custos; manter a limpeza geral pendente
