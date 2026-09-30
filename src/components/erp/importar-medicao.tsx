@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { brl, dateBR } from "@/lib/erp";
+import { brl, dateBR, fileHash } from "@/lib/erp";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -251,7 +251,7 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
     setRows(preview);
   };
 
-  const uploadImport = async (selected: File) => {
+  const uploadImport = async (selected: File, hash: string) => {
     const activeUser = data?.user;
     if (!activeUser) throw new Error("Sua sessão expirou.");
     const storagePath = `${activeUser.id}/${crypto.randomUUID()}-${selected.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
@@ -266,9 +266,10 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
         arquivo_path: storagePath,
         arquivo_nome: selected.name,
         arquivo_tipo: selected.type || "application/octet-stream",
+        hash_arquivo: hash,
         status: "processando",
         created_by: activeUser.id,
-      })
+      } as never)
       .select("id")
       .single();
     if (insertError) {
@@ -281,15 +282,18 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
   };
 
   const choose = async (selected: File) => {
-    setFile(selected);
     setRows([]);
     setHeaders([]);
     setRawRows([]);
     setDeclaredTotal(null);
     setMessage("");
+    const hash = await fileHash(selected);
+    const dup = data?.imports.find((item) => (item as { hash_arquivo?: string }).hash_arquivo === hash);
+    if (dup) { toast.error(`Este arquivo já foi enviado antes (${dup.arquivo_nome}, em ${dateBR(dup.created_at)}).`); return; }
+    setFile(selected);
     let uploadedId = "";
     try {
-      const uploaded = await uploadImport(selected);
+      const uploaded = await uploadImport(selected, hash);
       uploadedId = uploaded.id;
       if (!/\.pdf$/i.test(selected.name)) {
         const workbook = XLSX.read(await selected.arrayBuffer(), { type: "array", cellDates: true });

@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Camera, Download, FileText, LoaderCircle, Plus, RotateCcw, Trash2, Upload, HardHat, Anchor, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { dateBR } from "@/lib/erp";
+import { dateBR, fileHash } from "@/lib/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,7 +75,8 @@ export function Bulletin({ obraId }: { obraId: string }) {
       return { services: (services ?? []) as Service[], prices: prices ?? [], bulletins: (bulletins ?? []) as any[], canManage: (role ?? []).some(x => x.role === "admin" || x.role === "escritorio") };
     }
   });
-  const choose = (next: File | null) => { if (preview) URL.revokeObjectURL(preview); setFile(next); setPreview(next ? URL.createObjectURL(next) : undefined); setError(undefined) };
+  const [fileHashValue, setFileHashValue] = useState<string>();
+  const choose = (next: File | null) => { if (preview) URL.revokeObjectURL(preview); setFile(next); setPreview(next ? URL.createObjectURL(next) : undefined); setError(undefined); setFileHashValue(undefined) };
   const startType = (t: Tipo) => { setTipo(t); choose(null); setReview(emptyReview(today)) };
   const read = useMutation({
     mutationFn: async () => {
@@ -83,6 +84,10 @@ export function Bulletin({ obraId }: { obraId: string }) {
       const accepted = ["image/jpeg", "image/png", "image/heic", "image/heif", "application/pdf"];
       if (!accepted.includes(file.type)) throw new Error("Use JPG, PNG, HEIC ou PDF.");
       const { data: user } = await supabase.auth.getUser(); if (!user.user) throw new Error("Entre novamente.");
+      const hash = await fileHash(file);
+      const { data: dup } = await supabase.from("boletins").select("data").eq("obra_id", obraId).eq("hash_arquivo", hash).eq("status", "confirmado").maybeSingle();
+      if (dup) throw new Error(`Este arquivo já foi enviado nesta obra (boletim de ${new Date(`${dup.data}T12:00:00`).toLocaleDateString("pt-BR")}).`);
+      setFileHashValue(hash);
       const path = `${obraId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
       const uploaded = await supabase.storage.from("boletins").upload(path, file, { contentType: file.type, upsert: false });
       if (uploaded.error) throw uploaded.error;
@@ -113,7 +118,7 @@ export function Bulletin({ obraId }: { obraId: string }) {
       const path = typeof review.extracao === "object" && review.extracao && !Array.isArray(review.extracao) && "arquivo_path" in review.extracao ? String(review.extracao["arquivo_path"]) : "";
       const { data: user } = await supabase.auth.getUser();
       const reviewedExtraction = { tipo, header: review.header, values: review.values, trechos: review.trechos, fases: review.fases, itens: review.itens, leitura_original: review.extracao } as unknown as Json;
-      const { data: b, error: bError } = await supabase.from("boletins").insert({ obra_id: obraId, data: review.header.data_boletim || today, status: "confirmado", arquivo_path: path, arquivo_tipo: file.type, equipamento_id: review.equipamento_id || null, equipe_id: review.equipe_id || null, observacoes: review.header.observacoes || null, extracao_ia: reviewedExtraction, confianca_ia: review.confianca as unknown as Json, confirmado_em: new Date().toISOString(), created_by: user.user?.id ?? null } as never).select("id").single();
+      const { data: b, error: bError } = await supabase.from("boletins").insert({ obra_id: obraId, data: review.header.data_boletim || today, status: "confirmado", arquivo_path: path, arquivo_tipo: file.type, hash_arquivo: fileHashValue ?? await fileHash(file), equipamento_id: review.equipamento_id || null, equipe_id: review.equipe_id || null, observacoes: review.header.observacoes || null, extracao_ia: reviewedExtraction, confianca_ia: review.confianca as unknown as Json, confirmado_em: new Date().toISOString(), created_by: user.user?.id ?? null } as never).select("id").single();
       if (bError) throw bError;
       const boletimId = b.id as string;
       const servicos = data?.services ?? [];
