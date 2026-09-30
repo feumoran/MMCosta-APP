@@ -1,0 +1,1 @@
+ALTER FUNCTION public.sync_boletim_review_timestamps() SECURITY INVOKER;
