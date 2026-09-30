@@ -124,6 +124,7 @@ export type Database = {
           equipe_id: string | null
           equipe_texto: string | null
           extracao_ia: Json | null
+          hash_arquivo: string | null
           horas_paradas: number | null
           horas_trabalhadas: number | null
           id: string
@@ -146,6 +147,7 @@ export type Database = {
           equipe_id?: string | null
           equipe_texto?: string | null
           extracao_ia?: Json | null
+          hash_arquivo?: string | null
           horas_paradas?: number | null
           horas_trabalhadas?: number | null
           id?: string
@@ -168,6 +170,7 @@ export type Database = {
           equipe_id?: string | null
           equipe_texto?: string | null
           extracao_ia?: Json | null
+          hash_arquivo?: string | null
           horas_paradas?: number | null
           horas_trabalhadas?: number | null
           id?: string
@@ -343,6 +346,120 @@ export type Database = {
         }
         Relationships: []
       }
+      compras: {
+        Row: {
+          anexo_path: string | null
+          aprovada_em: string | null
+          aprovada_por: string | null
+          categoria: string
+          centro_custo_id: string
+          created_at: string
+          created_by: string | null
+          data_pagamento: string | null
+          descricao: string
+          fornecedor: string
+          hash_arquivo: string | null
+          id: string
+          importacao_id: string | null
+          lancamento_id: string | null
+          linha_digitavel: string | null
+          numero_documento: string | null
+          obra_id: string | null
+          observacoes: string | null
+          origem: string
+          status: Database["public"]["Enums"]["compra_status"]
+          updated_at: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          anexo_path?: string | null
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          categoria: string
+          centro_custo_id: string
+          created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          descricao: string
+          fornecedor: string
+          hash_arquivo?: string | null
+          id?: string
+          importacao_id?: string | null
+          lancamento_id?: string | null
+          linha_digitavel?: string | null
+          numero_documento?: string | null
+          obra_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          status?: Database["public"]["Enums"]["compra_status"]
+          updated_at?: string
+          valor: number
+          vencimento: string
+        }
+        Update: {
+          anexo_path?: string | null
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          categoria?: string
+          centro_custo_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          descricao?: string
+          fornecedor?: string
+          hash_arquivo?: string | null
+          id?: string
+          importacao_id?: string | null
+          lancamento_id?: string | null
+          linha_digitavel?: string | null
+          numero_documento?: string | null
+          obra_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          status?: Database["public"]["Enums"]["compra_status"]
+          updated_at?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_categoria_fkey"
+            columns: ["categoria"]
+            isOneToOne: false
+            referencedRelation: "categorias_lancamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_lancamento_id_fkey"
+            columns: ["lancamento_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       curva_planejada: {
         Row: {
           created_at: string
@@ -392,6 +509,7 @@ export type Database = {
           categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at: string
           created_by: string | null
+          hash_arquivo: string | null
           id: string
           obra_id: string
           tamanho_bytes: number
@@ -404,6 +522,7 @@ export type Database = {
           categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
+          hash_arquivo?: string | null
           id?: string
           obra_id: string
           tamanho_bytes: number
@@ -416,6 +535,7 @@ export type Database = {
           categoria?: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
+          hash_arquivo?: string | null
           id?: string
           obra_id?: string
           tamanho_bytes?: number
@@ -642,6 +762,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           funcionario_id: string
+          hash_arquivo: string | null
           id: string
           tamanho_bytes: number
           updated_at: string
@@ -654,6 +775,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           funcionario_id: string
+          hash_arquivo?: string | null
           id?: string
           tamanho_bytes: number
           updated_at?: string
@@ -666,6 +788,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           funcionario_id?: string
+          hash_arquivo?: string | null
           id?: string
           tamanho_bytes?: number
           updated_at?: string
@@ -783,6 +906,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           entidades_envolvidas: Json
+          hash_arquivo: string | null
           id: string
           linhas_total: number
           resumo: Json
@@ -798,6 +922,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entidades_envolvidas?: Json
+          hash_arquivo?: string | null
           id?: string
           linhas_total?: number
           resumo?: Json
@@ -813,6 +938,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entidades_envolvidas?: Json
+          hash_arquivo?: string | null
           id?: string
           linhas_total?: number
           resumo?: Json
@@ -1427,6 +1553,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aprovar_compra: { Args: { _compra: string }; Returns: undefined }
       buscar_preco: {
         Args: {
           _categoria: Database["public"]["Enums"]["categoria_perfuracao"]
@@ -1459,13 +1586,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      marcar_compra_paga: {
+        Args: { _compra: string; _data: string; _valor?: number }
+        Returns: string
+      }
       proximo_numero_medicao: { Args: { _obra: string }; Returns: number }
+      rejeitar_compra: {
+        Args: { _compra: string; _motivo?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "escritorio" | "engenharia" | "leitura"
       boletim_status: "pendente" | "lido_ia" | "confirmado"
       categoria_perfuracao: "solo" | "rocha_alterada" | "rocha"
       centro_custo_tipo: "obra" | "administrativo"
+      compra_status:
+        | "pendente"
+        | "aprovada"
+        | "rejeitada"
+        | "paga"
+        | "cancelada"
       documento_categoria:
         | "contrato"
         | "projeto_prancha"
@@ -1485,7 +1626,7 @@ export type Database = {
         | "parcial"
         | "descartada"
         | "erro"
-      importacao_tipo: "medicao" | "comprovantes"
+      importacao_tipo: "medicao" | "comprovantes" | "dda"
       lancamento_tipo: "recebimento" | "pagamento"
       medicao_origem: "boletins" | "planilha_importada" | "manual"
       medicao_status:
@@ -1627,6 +1768,7 @@ export const Constants = {
       boletim_status: ["pendente", "lido_ia", "confirmado"],
       categoria_perfuracao: ["solo", "rocha_alterada", "rocha"],
       centro_custo_tipo: ["obra", "administrativo"],
+      compra_status: ["pendente", "aprovada", "rejeitada", "paga", "cancelada"],
       documento_categoria: [
         "contrato",
         "projeto_prancha",
@@ -1649,7 +1791,7 @@ export const Constants = {
         "descartada",
         "erro",
       ],
-      importacao_tipo: ["medicao", "comprovantes"],
+      importacao_tipo: ["medicao", "comprovantes", "dda"],
       lancamento_tipo: ["recebimento", "pagamento"],
       medicao_origem: ["boletins", "planilha_importada", "manual"],
       medicao_status: [
