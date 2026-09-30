@@ -60,6 +60,22 @@ function CostCentersPage() {
   const inPeriod = (date: string) => (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo);
   const allEntries = (query.data?.entries ?? []).filter((item) => inPeriod(item.data));
   const allEmployeeCosts = (query.data?.employeeCosts ?? []).filter((item) => inPeriod(item.data));
+  const centerSummaries = useMemo(() => {
+    const summaries = new Map<string, { count: number; total: number }>();
+    for (const entry of allEntries) {
+      const current = summaries.get(entry.centro_custo_id) ?? { count: 0, total: 0 };
+      current.count += 1;
+      current.total += entry.tipo === "recebimento" ? Number(entry.valor) : -Number(entry.valor);
+      summaries.set(entry.centro_custo_id, current);
+    }
+    for (const cost of allEmployeeCosts) {
+      const current = summaries.get(cost.centro_custo_id) ?? { count: 0, total: 0 };
+      current.count += 1;
+      current.total -= Number(cost.valor_diaria);
+      summaries.set(cost.centro_custo_id, current);
+    }
+    return summaries;
+  }, [allEmployeeCosts, allEntries]);
   const categories = query.data?.categories ?? [];
   const entries = selected ? allEntries.filter((item) => item.centro_custo_id === selected.id) : [];
   const employeeCosts = selected ? allEmployeeCosts.filter((item) => item.centro_custo_id === selected.id) : [];
@@ -80,7 +96,7 @@ function CostCentersPage() {
         <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar centro de custo" className="pl-9"/></div>
         <div className="mt-3 flex gap-1 overflow-x-auto">{(["todos", "obra", "administrativo"] as CenterFilter[]).map((value) => <Button key={value} size="sm" variant={filter === value ? "default" : "ghost"} onClick={() => setFilter(value)}>{value === "todos" ? "Todos" : value === "obra" ? "Obras" : "Administrativos"}</Button>)}</div>
         <div className="mt-4 grid grid-cols-2 gap-2"><label className="text-[11px] text-muted-foreground">De<Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)}/></label><label className="text-[11px] text-muted-foreground">Até<Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)}/></label></div>
-        <div className="mt-4 max-h-[58vh] space-y-1 overflow-y-auto">{visibleCenters.map((item) => {const itemEntries = allEntries.filter((entry) => entry.centro_custo_id === item.id);const itemCosts=allEmployeeCosts.filter((cost)=>cost.centro_custo_id===item.id);const total = itemEntries.reduce((sum, entry) => sum + (entry.tipo === "recebimento" ? Number(entry.valor) : -Number(entry.valor)), 0)-itemCosts.reduce((sum,cost)=>sum+Number(cost.valor_diaria),0);return <Button key={item.id} variant={selected?.id === item.id ? "secondary" : "ghost"} className="h-auto w-full justify-start px-3 py-3 text-left" onClick={() => setSelectedId(item.id)}><span className="flex min-w-0 flex-1 items-center gap-3">{item.tipo === "obra" ? <Building2 className="size-4 shrink-0"/> : <Landmark className="size-4 shrink-0"/>}<span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{item.nome}</span><span className="block truncate text-[11px] font-normal text-muted-foreground">{item.tipo === "obra" ? item.obras?.nome ?? "Obra" : "Administrativo"} · {itemEntries.length+itemCosts.length} movimentações</span></span><span className="shrink-0 font-mono text-xs">{brl.format(total)}</span></span></Button>})}{visibleCenters.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Nenhum centro encontrado.</p>}</div>
+        <div className="mt-4 max-h-[58vh] space-y-1 overflow-y-auto">{visibleCenters.map((item) => {const summary = centerSummaries.get(item.id) ?? { count: 0, total: 0 };return <Button key={item.id} variant={selected?.id === item.id ? "secondary" : "ghost"} className="h-auto w-full justify-start px-3 py-3 text-left" onClick={() => setSelectedId(item.id)}><span className="flex min-w-0 flex-1 items-center gap-3">{item.tipo === "obra" ? <Building2 className="size-4 shrink-0"/> : <Landmark className="size-4 shrink-0"/>}<span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{item.nome}</span><span className="block truncate text-[11px] font-normal text-muted-foreground">{item.tipo === "obra" ? item.obras?.nome ?? "Obra" : "Administrativo"} · {summary.count} movimentações</span></span><span className="shrink-0 font-mono text-xs">{brl.format(summary.total)}</span></span></Button>})}{visibleCenters.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Nenhum centro encontrado.</p>}</div>
       </aside>
       <section className="min-w-0">{selected ? <><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase text-primary">{selected.tipo === "obra" ? "Centro da obra" : "Centro administrativo"}</p><h2 className="font-display text-2xl font-bold">{selected.nome}</h2>{selected.obras?.nome && <p className="mt-1 text-sm text-muted-foreground">{selected.obras.nome}</p>}</div>{!selected.ativo && <span className="rounded-sm bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">Inativo</span>}</div>
         <div className="mt-5 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4">{[["Recebimentos", received], ["Pagamentos", paid], ["Equipe", teamPaid], ["Saldo", received - paid]].map(([label, value]) => <div key={String(label)} className="bg-card p-4"><p className="text-[11px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-2 font-mono text-xl font-semibold">{brl.format(Number(value))}</p></div>)}</div>
