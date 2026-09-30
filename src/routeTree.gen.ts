@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedComprovantesRouteImport } from './routes/_authenticated/comprovantes'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedFuncionariosRouteImport } from './routes/_authenticated/funcionarios'
 import { Route as AuthenticatedRegistroAlteracoesRouteImport } from './routes/_authenticated/registro-alteracoes'
 import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authenticated/visao-geral'
@@ -58,6 +59,11 @@ const AuthenticatedComprovantesRoute =
     path: '/comprovantes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFuncionariosRoute =
   AuthenticatedFuncionariosRouteImport.update({
     id: '/funcionarios',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/_authenticated/comprovantes': typeof AuthenticatedComprovantesRoute
+  '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/funcionarios': typeof AuthenticatedFuncionariosRoute
   '/_authenticated/registro-alteracoes': typeof AuthenticatedRegistroAlteracoesRoute
   '/_authenticated/visao-geral': typeof AuthenticatedVisaoGeralRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
+    | '/financeiro'
     | '/funcionarios'
     | '/registro-alteracoes'
     | '/visao-geral'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
+    | '/financeiro'
     | '/funcionarios'
     | '/registro-alteracoes'
     | '/visao-geral'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros'
     | '/_authenticated/centros-custo'
     | '/_authenticated/comprovantes'
+    | '/_authenticated/financeiro'
     | '/_authenticated/funcionarios'
     | '/_authenticated/registro-alteracoes'
     | '/_authenticated/visao-geral'
@@ -285,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/comprovantes'
       fullPath: '/comprovantes'
       preLoaderRoute: typeof AuthenticatedComprovantesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/funcionarios': {
@@ -371,6 +390,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedCentrosCustoRoute: typeof AuthenticatedCentrosCustoRoute
   AuthenticatedComprovantesRoute: typeof AuthenticatedComprovantesRoute
+  AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFuncionariosRoute: typeof AuthenticatedFuncionariosRoute
   AuthenticatedRegistroAlteracoesRoute: typeof AuthenticatedRegistroAlteracoesRoute
   AuthenticatedVisaoGeralRoute: typeof AuthenticatedVisaoGeralRoute
@@ -383,6 +403,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedCentrosCustoRoute: AuthenticatedCentrosCustoRoute,
   AuthenticatedComprovantesRoute: AuthenticatedComprovantesRoute,
+  AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFuncionariosRoute: AuthenticatedFuncionariosRoute,
   AuthenticatedRegistroAlteracoesRoute: AuthenticatedRegistroAlteracoesRoute,
   AuthenticatedVisaoGeralRoute: AuthenticatedVisaoGeralRoute,
