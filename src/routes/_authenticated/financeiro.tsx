@@ -35,10 +35,9 @@ function FinancePage() {
 
   return <div className="space-y-6">
     <header><p className="text-xs font-bold uppercase text-primary">Empresa</p><h1 className="font-display text-3xl font-bold">Financeiro</h1></header>
-    <Tabs defaultValue="compras">
-      <TabsList><TabsTrigger value="compras">Compras a pagar</TabsTrigger><TabsTrigger value="manual">Lançamentos manuais</TabsTrigger><TabsTrigger value="extrato">Extrato</TabsTrigger></TabsList>
-      <TabsContent value="compras" className="mt-6"><Purchases /></TabsContent>
-      <TabsContent value="manual" className="mt-6"><ManualEntries /></TabsContent>
+    <Tabs defaultValue="contas">
+      <TabsList><TabsTrigger value="contas">Contas a pagar</TabsTrigger><TabsTrigger value="extrato">Extrato</TabsTrigger></TabsList>
+      <TabsContent value="contas" className="mt-6 space-y-10"><Purchases /><ManualEntries /></TabsContent>
       <TabsContent value="extrato" className="mt-6"><Statement /></TabsContent>
     </Tabs>
   </div>;
