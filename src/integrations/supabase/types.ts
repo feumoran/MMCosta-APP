@@ -488,6 +488,7 @@ export type Database = {
           arquivo_path: string
           arquivo_tipo: string
           confianca_ia: Json | null
+          confirmado_em: string | null
           contratante: string | null
           created_at: string
           created_by: string | null
@@ -511,6 +512,7 @@ export type Database = {
           arquivo_path: string
           arquivo_tipo: string
           confianca_ia?: Json | null
+          confirmado_em?: string | null
           contratante?: string | null
           created_at?: string
           created_by?: string | null
@@ -534,6 +536,7 @@ export type Database = {
           arquivo_path?: string
           arquivo_tipo?: string
           confianca_ia?: Json | null
+          confirmado_em?: string | null
           contratante?: string | null
           created_at?: string
           created_by?: string | null
