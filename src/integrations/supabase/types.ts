@@ -124,6 +124,7 @@ export type Database = {
           equipe_id: string | null
           equipe_texto: string | null
           extracao_ia: Json | null
+          hash_arquivo: string | null
           horas_paradas: number | null
           horas_trabalhadas: number | null
           id: string
@@ -146,6 +147,7 @@ export type Database = {
           equipe_id?: string | null
           equipe_texto?: string | null
           extracao_ia?: Json | null
+          hash_arquivo?: string | null
           horas_paradas?: number | null
           horas_trabalhadas?: number | null
           id?: string
@@ -168,6 +170,7 @@ export type Database = {
           equipe_id?: string | null
           equipe_texto?: string | null
           extracao_ia?: Json | null
+          hash_arquivo?: string | null
           horas_paradas?: number | null
           horas_trabalhadas?: number | null
           id?: string
@@ -392,6 +395,7 @@ export type Database = {
           categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at: string
           created_by: string | null
+          hash_arquivo: string | null
           id: string
           obra_id: string
           tamanho_bytes: number
@@ -404,6 +408,7 @@ export type Database = {
           categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
+          hash_arquivo?: string | null
           id?: string
           obra_id: string
           tamanho_bytes: number
@@ -416,6 +421,7 @@ export type Database = {
           categoria?: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
+          hash_arquivo?: string | null
           id?: string
           obra_id?: string
           tamanho_bytes?: number
@@ -642,6 +648,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           funcionario_id: string
+          hash_arquivo: string | null
           id: string
           tamanho_bytes: number
           updated_at: string
@@ -654,6 +661,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           funcionario_id: string
+          hash_arquivo?: string | null
           id?: string
           tamanho_bytes: number
           updated_at?: string
@@ -666,6 +674,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           funcionario_id?: string
+          hash_arquivo?: string | null
           id?: string
           tamanho_bytes?: number
           updated_at?: string
@@ -783,6 +792,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           entidades_envolvidas: Json
+          hash_arquivo: string | null
           id: string
           linhas_total: number
           resumo: Json
@@ -798,6 +808,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entidades_envolvidas?: Json
+          hash_arquivo?: string | null
           id?: string
           linhas_total?: number
           resumo?: Json
@@ -813,6 +824,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entidades_envolvidas?: Json
+          hash_arquivo?: string | null
           id?: string
           linhas_total?: number
           resumo?: Json
