@@ -8,9 +8,9 @@ import { Statement } from "@/components/erp/extrato";
 import { CostCenters } from "@/components/erp/centros-custo";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  validateSearch: (search: Record<string, unknown>): { aba?: "contas" | "centros" | "extrato"; centro?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { aba: "contas" | "centros" | "extrato"; centro?: string } => ({
     aba: search["aba"] === "centros" || search["aba"] === "extrato" ? search["aba"] : "contas",
-    centro: typeof search["centro"] === "string" ? search["centro"] : undefined,
+    ...(typeof search["centro"] === "string" ? { centro: search["centro"] } : {}),
   }),
   head: () => ({ meta: [
     { title: "Financeiro | MMcosta Engenharia" },
@@ -44,7 +44,7 @@ function FinancePage() {
     <Tabs defaultValue={aba}>
       <TabsList><TabsTrigger value="contas">Contas a pagar</TabsTrigger><TabsTrigger value="centros">Centros de custo</TabsTrigger><TabsTrigger value="extrato">Extrato</TabsTrigger></TabsList>
       <TabsContent value="contas" className="mt-6 space-y-10"><Purchases /><ManualEntries /></TabsContent>
-      <TabsContent value="centros" className="mt-6"><CostCenters initialCenter={centro} /></TabsContent>
+      <TabsContent value="centros" className="mt-6"><CostCenters {...(centro ? { initialCenter: centro } : {})} /></TabsContent>
       <TabsContent value="extrato" className="mt-6"><Statement /></TabsContent>
     </Tabs>
   </div>;
