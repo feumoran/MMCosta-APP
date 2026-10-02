@@ -93,19 +93,51 @@ export function Purchases() {
       const hash = await fileHash(file);
       const dup = data.imports.find(i => (i as { hash_arquivo?: string }).hash_arquivo === hash);
       if (dup) throw new Error(`Este arquivo já foi enviado antes (${dup.arquivo_nome}, em ${dateBR(dup.created_at)}).`);
-      const book = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(book.Sheets[book.SheetNames[0] ?? ""] ?? {}, { defval: "" });
-      if (!raw.length) throw new Error("A planilha está vazia.");
-      const pick = (r: Record<string, unknown>, words: string[]) => { const k = Object.keys(r).find(key => words.some(w => normalize(key).includes(w))); return k ? String(r[k] ?? "").trim() : ""; };
-      const rows = raw.map(r => ({
-        fornecedor: pick(r, ["beneficiario", "favorecido", "fornecedor", "cedente"]),
-        descricao: pick(r, ["descricao", "historico", "especie"]),
-        valor: Number(pick(r, ["valor"]).replace(/\./g, "").replace(",", ".")) || 0,
-        vencimento: pick(r, ["vencimento", "data"]) || today(),
-        linha: pick(r, ["linha digitavel", "codigo de barras", "linha"]),
-        documento: pick(r, ["documento", "nosso numero", "titulo"]),
-      })).filter(r => r.fornecedor && r.valor > 0);
-      if (!rows.length) throw new Error("Não encontrei títulos válidos (beneficiário e valor) na planilha.");
+      let rows: { fornecedor: string; descricao: string; valor: number; vencimento: string; linha: string; documento: string }[];
+      if (/\.pdf$/i.test(file.name)) {
+        const pdfjs = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+        const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+        const textParts: string[] = [];
+        for (let p = 1; p <= pdf.numPages; p++) {
+          const content = await (await pdf.getPage(p)).getTextContent();
+          const positioned = content.items.filter((i): i is typeof i & { str: string; transform: number[] } => "str" in i && "transform" in i).map(i => ({ text: i.str.trim(), x: i.transform[4] ?? 0, y: i.transform[5] ?? 0 })).filter(i => i.text).sort((a, b) => Math.abs(b.y - a.y) > 2 ? b.y - a.y : a.x - b.x);
+          const lines: { y: number; cells: { x: number; text: string }[] }[] = [];
+          positioned.forEach(item => { const line = lines.find(l => Math.abs(l.y - item.y) <= 2); if (line) line.cells.push({ x: item.x, text: item.text }); else lines.push({ y: item.y, cells: [{ x: item.x, text: item.text }] }); });
+          textParts.push(lines.map(l => l.cells.sort((a, b) => a.x - b.x).map(c => c.text).join(" | ")).join("\n"));
+        }
+        const extractedText = textParts.join("\n").trim();
+        const pages: string[] = [];
+        if (extractedText.length < 100) {
+          for (let p = 1; p <= Math.min(pdf.numPages, 30); p++) {
+            const page = await pdf.getPage(p); const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement("canvas"); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+            const ctx = canvas.getContext("2d"); if (!ctx) continue;
+            await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+            pages.push(canvas.toDataURL("image/jpeg", 0.82));
+          }
+        }
+        const { data: session } = await supabase.auth.getSession();
+        const response = await fetch("/api/ler-dda", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` }, body: JSON.stringify({ nomeArquivo: file.name, texto: extractedText.length >= 100 ? extractedText : null, paginas: pages }) });
+        const payload = await response.json() as { extracao?: { titulos: { beneficiario: string; descricao: string | null; valor: number; vencimento: string | null; linha_digitavel: string | null; documento: string | null }[] }; error?: string };
+        if (!response.ok || !payload.extracao) throw new Error(payload.error ?? "Não foi possível ler o PDF.");
+        rows = payload.extracao.titulos.map(t => ({ fornecedor: t.beneficiario, descricao: t.descricao ?? "", valor: t.valor, vencimento: t.vencimento ?? today(), linha: t.linha_digitavel ?? "", documento: t.documento ?? "" }));
+      } else {
+        const book = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+        const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(book.Sheets[book.SheetNames[0] ?? ""] ?? {}, { defval: "" });
+        if (!raw.length) throw new Error("A planilha está vazia.");
+        const pick = (r: Record<string, unknown>, words: string[]) => { const k = Object.keys(r).find(key => words.some(w => normalize(key).includes(w))); return k ? String(r[k] ?? "").trim() : ""; };
+        rows = raw.map(r => ({
+          fornecedor: pick(r, ["beneficiario", "favorecido", "fornecedor", "cedente"]),
+          descricao: pick(r, ["descricao", "historico", "especie"]),
+          valor: Number(pick(r, ["valor"]).replace(/\./g, "").replace(",", ".")) || 0,
+          vencimento: pick(r, ["vencimento", "data"]) || today(),
+          linha: pick(r, ["linha digitavel", "codigo de barras", "linha"]),
+          documento: pick(r, ["documento", "nosso numero", "titulo"]),
+        }));
+      }
+      rows = rows.filter(r => r.fornecedor && r.valor > 0);
+      if (!rows.length) throw new Error("Não encontrei títulos válidos (beneficiário e valor) no arquivo.");
       const center = data.centers.find(c => c.id === ddaCenter);
       const { data: user } = await supabase.auth.getUser();
       const path = `${user.user?.id ?? "dda"}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
@@ -142,12 +174,12 @@ export function Purchases() {
 
     {canCreate && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
       <h2 className="font-display text-xl font-bold">Importar DDA</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Exporte a lista de títulos do internet banking como planilha (CSV/XLSX) e envie aqui. Cada título vira uma compra pendente.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Exporte a lista de títulos do internet banking como planilha (CSV/XLSX) ou PDF e envie aqui. Cada título vira uma compra pendente.</p>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <Select value={ddaCenter} onValueChange={setDdaCenter}><SelectTrigger><SelectValue placeholder="Centro de custo padrão" /></SelectTrigger><SelectContent>{data.centers.map(c => <SelectItem key={c.id} value={c.id}>{centerLabel(c, data.works)}</SelectItem>)}</SelectContent></Select>
         <Select value={ddaCategoria} onValueChange={setDdaCategoria}><SelectTrigger><SelectValue placeholder="Categoria padrão" /></SelectTrigger><SelectContent>{data.cats.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select>
-        <input ref={ddaInput} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadDda(f); e.target.value = ""; }} />
-        <Button type="button" variant="outline" disabled={ddaReading} onClick={() => ddaInput.current?.click()}>{ddaReading ? <LoaderCircle className="animate-spin" /> : <Upload />}{ddaReading ? "Lendo…" : "Enviar planilha de DDA"}</Button>
+        <input ref={ddaInput} type="file" accept=".xlsx,.xls,.csv,.pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadDda(f); e.target.value = ""; }} />
+        <Button type="button" variant="outline" disabled={ddaReading} onClick={() => ddaInput.current?.click()}>{ddaReading ? <LoaderCircle className="animate-spin" /> : <Upload />}{ddaReading ? "Lendo…" : "Enviar planilha ou PDF de DDA"}</Button>
       </div>
     </section>}
 
