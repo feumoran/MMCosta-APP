@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Purchases } from "@/components/erp/compras";
-import { ManualEntries } from "@/components/erp/lancamento-manual";
 import { Statement } from "@/components/erp/extrato";
 import { CostCenters } from "@/components/erp/centros-custo";
 
@@ -43,7 +42,7 @@ function FinancePage() {
     <header><p className="text-xs font-bold uppercase text-primary">Empresa</p><h1 className="font-display text-3xl font-bold">Financeiro</h1></header>
     <Tabs defaultValue={aba}>
       <TabsList><TabsTrigger value="contas">Contas a pagar</TabsTrigger><TabsTrigger value="centros">Centros de custo</TabsTrigger><TabsTrigger value="extrato">Extrato</TabsTrigger></TabsList>
-      <TabsContent value="contas" className="mt-6 space-y-10"><Purchases /><ManualEntries /></TabsContent>
+      <TabsContent value="contas" className="mt-6 space-y-10"><Purchases /></TabsContent>
       <TabsContent value="centros" className="mt-6"><CostCenters {...(centro ? { initialCenter: centro } : {})} /></TabsContent>
       <TabsContent value="extrato" className="mt-6"><Statement /></TabsContent>
     </Tabs>
