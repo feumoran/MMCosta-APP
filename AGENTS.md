@@ -11,3 +11,4 @@
 
 - Authentication emails use the managed `/lovable/email/auth/*` routes and shared MMcosta templates, because delivery and branding must remain consistent.
 - Obra status is synchronized from its latest physical progress mark in the database, so 100% completion stays consistent across every screen.
+- Employee vacation tracking uses ferias_limite; retain deprecated ferias_inicio and ferias_fim columns for backward compatibility and to avoid destructive schema changes.
