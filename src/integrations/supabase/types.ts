@@ -737,7 +737,6 @@ export type Database = {
           hash_arquivo: string | null
           id: string
           importacao_id: string | null
-          justificativa: string | null
           lancamento_id: string | null
           linha_digitavel: string | null
           numero_documento: string | null
@@ -765,7 +764,6 @@ export type Database = {
           importacao_id?: string | null
           lancamento_id?: string | null
           linha_digitavel?: string | null
-          justificativa?: string | null
           numero_documento?: string | null
           obra_id?: string | null
           observacoes?: string | null
@@ -791,7 +789,6 @@ export type Database = {
           importacao_id?: string | null
           lancamento_id?: string | null
           linha_digitavel?: string | null
-          justificativa?: string | null
           numero_documento?: string | null
           obra_id?: string | null
           observacoes?: string | null
@@ -1246,7 +1243,6 @@ export type Database = {
           created_by: string | null
           data_admissao: string
           data_desligamento: string | null
-          ferias_limite: string | null
           id: string
           nome: string
           observacoes: string | null
@@ -1259,7 +1255,6 @@ export type Database = {
           created_by?: string | null
           data_admissao: string
           data_desligamento?: string | null
-          ferias_limite?: string | null
           id?: string
           nome: string
           observacoes?: string | null
@@ -1272,7 +1267,6 @@ export type Database = {
           created_by?: string | null
           data_admissao?: string
           data_desligamento?: string | null
-          ferias_limite?: string | null
           id?: string
           nome?: string
           observacoes?: string | null
@@ -2001,16 +1995,12 @@ export type Database = {
         | "art_rrt"
         | "laudo_tecnico"
         | "nota_fiscal"
-        | "fgts"
-        | "gps_darf"
-        | "holerite_assinado"
         | "outros"
       funcionario_documento_categoria:
         | "pessoal"
         | "contrato"
-        | "nr"
+        | "mr"
         | "aso"
-        | "exame_medico"
         | "outros"
       importacao_status:
         | "processando"
@@ -2174,17 +2164,13 @@ export const Constants = {
         "art_rrt",
         "laudo_tecnico",
         "nota_fiscal",
-        "fgts",
-        "gps_darf",
-        "holerite_assinado",
         "outros",
       ],
       funcionario_documento_categoria: [
         "pessoal",
         "contrato",
-        "nr",
+        "mr",
         "aso",
-        "exame_medico",
         "outros",
       ],
       importacao_status: [
