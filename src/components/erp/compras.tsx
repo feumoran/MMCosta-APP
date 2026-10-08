@@ -1,44 +1,42 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, LoaderCircle, Plus, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Download, Eye, Paperclip, Plus, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
-import { brl, dateBR, fileHash } from "@/lib/erp";
+import { brl, dateBR } from "@/lib/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Center = { id: string; nome: string; tipo: string; obra_id: string | null };
 const statusLabel: Record<string, string> = { pendente: "Pendente", aprovada: "Aprovada", rejeitada: "Rejeitada", paga: "Paga", cancelada: "Cancelada" };
 const statusTone: Record<string, string> = { pendente: "bg-warning/15 text-warning", aprovada: "bg-primary/10 text-primary", rejeitada: "bg-destructive/10 text-destructive", paga: "bg-good/10 text-good", cancelada: "bg-muted text-muted-foreground" };
 const today = () => new Date().toISOString().slice(0, 10);
-const normalize = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLocaleLowerCase("pt-BR").trim();
 const centerLabel = (c: Center, works: { id: string; nome: string }[]) => c.tipo === "obra" ? `Obra · ${works.find(w => w.id === c.obra_id)?.nome ?? c.nome}` : `Centro · ${c.nome}`;
-const emptyForm = { fornecedor: "", descricao: "", categoria: "", valor: "", vencimento: today(), centro_custo_id: "" };
+const emptyForm = { fornecedor: "", descricao: "", categoria: "", valor: "", vencimento: today(), centro_custo_id: "", numero_documento: "", justificativa: "" };
 
 export function Purchases() {
   const qc = useQueryClient();
   const [form, setForm] = useState(emptyForm);
-  const [statusFilter, setStatusFilter] = useState("todas");
-  const ddaInput = useRef<HTMLInputElement>(null);
-  const [ddaCenter, setDdaCenter] = useState("");
-  const [ddaCategoria, setDdaCategoria] = useState("");
-  const [ddaReading, setDdaReading] = useState(false);
+  const [nf, setNf] = useState<File | null>(null);
+  const nfInput = useRef<HTMLInputElement>(null);
+  const [statusFilter, setStatusFilter] = useState("abertas");
+  const [preview, setPreview] = useState<{ url: string; type: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["compras"], queryFn: async () => {
-      const [{ data: user }, { data: roles }, { data: compras, error: ce }, { data: centers }, { data: works }, { data: cats }, { data: imports }] = await Promise.all([
+      const [{ data: user }, { data: roles }, { data: compras, error: ce }, { data: centers }, { data: works }, { data: cats }] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from("user_roles").select("role"),
         supabase.from("compras").select("*").order("vencimento", { ascending: true }),
         supabase.from("centros_custo").select("id,nome,tipo,obra_id").eq("ativo", true),
         supabase.from("obras").select("id,nome").eq("ativo", true),
         supabase.from("categorias_lancamento").select("id,nome").eq("ativo", true),
-        supabase.from("importacoes").select("*").eq("tipo", "dda" as never).order("created_at", { ascending: false }),
       ]);
       if (ce) throw ce;
-      return { user: user.user, role: roles?.[0]?.role ?? "leitura", compras: (compras ?? []) as any[], centers: (centers ?? []) as Center[], works: works ?? [], cats: cats ?? [], imports: (imports ?? []) as any[] };
+      return { user: user.user, role: roles?.[0]?.role ?? "leitura", compras: (compras ?? []) as any[], centers: (centers ?? []) as Center[], works: works ?? [], cats: cats ?? [] };
     },
   });
   const isAdmin = data?.role === "admin";
@@ -50,11 +48,19 @@ export function Purchases() {
       if (!form.fornecedor.trim() || !form.categoria || !form.centro_custo_id) throw new Error("Preencha fornecedor, categoria e centro de custo.");
       const valor = Number(form.valor.replace(",", "."));
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Informe um valor válido.");
+      if (!form.vencimento) throw new Error("Informe a data de vencimento.");
+      if (!nf && !form.justificativa.trim()) throw new Error("Anexe a NF ou o cupom fiscal. Se não houver, escreva a justificativa.");
       const center = data.centers.find(c => c.id === form.centro_custo_id);
-      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
-      if (ie) throw ie;
+      let anexoPath: string | null = null;
+      if (nf) {
+        anexoPath = `${data.user?.id ?? "compras"}/${crypto.randomUUID()}-${nf.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+        const { error: ue } = await supabase.storage.from("compras").upload(anexoPath, nf, { contentType: nf.type || "application/octet-stream" });
+        if (ue) throw ue;
+      }
+      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, anexo_path: anexoPath, justificativa: nf ? null : form.justificativa.trim(), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
+      if (ie) { if (anexoPath) await supabase.storage.from("compras").remove([anexoPath]); throw ie; }
     },
-    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNf(null); qc.invalidateQueries({ queryKey: ["compras"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível registrar a compra."),
   });
 
@@ -85,78 +91,20 @@ export function Purchases() {
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível cancelar."),
   });
 
-  const uploadDda = async (file: File) => {
-    if (!data) return;
-    if (!ddaCenter || !ddaCategoria) { toast.error("Escolha o centro de custo e a categoria para lançar os títulos desta planilha."); return; }
-    setDdaReading(true);
-    try {
-      const hash = await fileHash(file);
-      const dup = data.imports.find(i => (i as { hash_arquivo?: string }).hash_arquivo === hash);
-      if (dup) throw new Error(`Este arquivo já foi enviado antes (${dup.arquivo_nome}, em ${dateBR(dup.created_at)}).`);
-      let rows: { fornecedor: string; descricao: string; valor: number; vencimento: string; linha: string; documento: string }[];
-      if (/\.pdf$/i.test(file.name)) {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-        const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
-        const textParts: string[] = [];
-        for (let p = 1; p <= pdf.numPages; p++) {
-          const content = await (await pdf.getPage(p)).getTextContent();
-          const positioned = content.items.filter((i): i is typeof i & { str: string; transform: number[] } => "str" in i && "transform" in i).map(i => ({ text: i.str.trim(), x: i.transform[4] ?? 0, y: i.transform[5] ?? 0 })).filter(i => i.text).sort((a, b) => Math.abs(b.y - a.y) > 2 ? b.y - a.y : a.x - b.x);
-          const lines: { y: number; cells: { x: number; text: string }[] }[] = [];
-          positioned.forEach(item => { const line = lines.find(l => Math.abs(l.y - item.y) <= 2); if (line) line.cells.push({ x: item.x, text: item.text }); else lines.push({ y: item.y, cells: [{ x: item.x, text: item.text }] }); });
-          textParts.push(lines.map(l => l.cells.sort((a, b) => a.x - b.x).map(c => c.text).join(" | ")).join("\n"));
-        }
-        const extractedText = textParts.join("\n").trim();
-        const pages: string[] = [];
-        if (extractedText.length < 100) {
-          for (let p = 1; p <= Math.min(pdf.numPages, 30); p++) {
-            const page = await pdf.getPage(p); const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement("canvas"); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
-            const ctx = canvas.getContext("2d"); if (!ctx) continue;
-            await page.render({ canvas, canvasContext: ctx, viewport }).promise;
-            pages.push(canvas.toDataURL("image/jpeg", 0.82));
-          }
-        }
-        const { data: session } = await supabase.auth.getSession();
-        const response = await fetch("/api/ler-dda", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` }, body: JSON.stringify({ nomeArquivo: file.name, texto: extractedText.length >= 100 ? extractedText : null, paginas: pages }) });
-        const payload = await response.json() as { extracao?: { titulos: { beneficiario: string; descricao: string | null; valor: number; vencimento: string | null; linha_digitavel: string | null; documento: string | null }[] }; error?: string };
-        if (!response.ok || !payload.extracao) throw new Error(payload.error ?? "Não foi possível ler o PDF.");
-        rows = payload.extracao.titulos.map(t => ({ fornecedor: t.beneficiario, descricao: t.descricao ?? "", valor: t.valor, vencimento: t.vencimento ?? today(), linha: t.linha_digitavel ?? "", documento: t.documento ?? "" }));
-      } else {
-        const book = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-        const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(book.Sheets[book.SheetNames[0] ?? ""] ?? {}, { defval: "" });
-        if (!raw.length) throw new Error("A planilha está vazia.");
-        const pick = (r: Record<string, unknown>, words: string[]) => { const k = Object.keys(r).find(key => words.some(w => normalize(key).includes(w))); return k ? String(r[k] ?? "").trim() : ""; };
-        rows = raw.map(r => ({
-          fornecedor: pick(r, ["beneficiario", "favorecido", "fornecedor", "cedente"]),
-          descricao: pick(r, ["descricao", "historico", "especie"]),
-          valor: Number(pick(r, ["valor"]).replace(/\./g, "").replace(",", ".")) || 0,
-          vencimento: pick(r, ["vencimento", "data"]) || today(),
-          linha: pick(r, ["linha digitavel", "codigo de barras", "linha"]),
-          documento: pick(r, ["documento", "nosso numero", "titulo"]),
-        }));
-      }
-      rows = rows.filter(r => r.fornecedor && r.valor > 0);
-      if (!rows.length) throw new Error("Não encontrei títulos válidos (beneficiário e valor) no arquivo.");
-      const center = data.centers.find(c => c.id === ddaCenter);
-      const { data: user } = await supabase.auth.getUser();
-      const path = `${user.user?.id ?? "dda"}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
-      const { error: ue } = await supabase.storage.from("importacoes").upload(path, file, { contentType: file.type || "application/octet-stream" });
-      if (ue) throw ue;
-      const { data: imp, error: ie } = await supabase.from("importacoes").insert({ tipo: "dda" as never, arquivo_path: path, arquivo_nome: file.name, arquivo_tipo: file.type || "application/octet-stream", hash_arquivo: hash, status: "concluida", linhas_total: rows.length, valor_total: rows.reduce((s, r) => s + r.valor, 0), entidades_envolvidas: [ddaCenter], created_by: user.user?.id ?? null } as never).select("id").single();
-      if (ie) throw ie;
-      const payload = rows.map(r => ({ fornecedor: r.fornecedor, descricao: r.descricao || r.fornecedor, categoria: ddaCategoria, valor: r.valor, vencimento: /^\d{4}-\d{2}-\d{2}$/.test(r.vencimento) ? r.vencimento : today(), centro_custo_id: ddaCenter, obra_id: center?.obra_id ?? null, status: "pendente", origem: "dda", linha_digitavel: r.linha || null, numero_documento: r.documento || null, importacao_id: imp.id, created_by: user.user?.id ?? null }));
-      const { error: pe } = await supabase.from("compras").insert(payload as never);
-      if (pe) throw pe;
-      toast.success(`${rows.length} título(s) importado(s) como compras pendentes.`);
-      qc.invalidateQueries({ queryKey: ["compras"] });
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível importar a planilha."); }
-    finally { setDdaReading(false); }
+  const openNf = async (path: string, name: string, download = false) => {
+    const { data: signed, error: se } = await supabase.storage.from("compras").createSignedUrl(path, 300, download ? { download: name } : undefined);
+    if (se || !signed) { toast.error("Não foi possível abrir o anexo."); return; }
+    const lower = path.toLowerCase();
+    if (!download && (/\.(png|jpe?g|webp|gif|heic)$/.test(lower) || lower.endsWith(".pdf"))) { setPreview({ url: signed.signedUrl, type: lower.endsWith(".pdf") ? "application/pdf" : "image/*", name }); return; }
+    const a = document.createElement("a"); a.href = signed.signedUrl; a.download = name; a.click();
   };
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando compras…</p>;
-  if (error || !data) return <p className="text-sm text-destructive">Não foi possível carregar as compras.</p>;
-  const shown = data.compras.filter(c => statusFilter === "todas" || c.status === statusFilter);
+  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando contas a pagar…</p>;
+  if (error || !data) return <p className="text-sm text-destructive">Não foi possível carregar as contas a pagar.</p>;
+  const shown = data.compras
+    .filter(c => statusFilter === "todas" ? true : statusFilter === "abertas" ? (c.status === "pendente" || c.status === "aprovada") : c.status === statusFilter)
+    .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)));
+  const fileName = (path: string) => path.split("/").pop()?.replace(/^[0-9a-f-]{36}-/, "") ?? "anexo";
 
   return <div className="space-y-8">
     {canCreate && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
@@ -167,35 +115,33 @@ export function Purchases() {
         <Select value={form.categoria} onValueChange={v => setForm({ ...form, categoria: v })}><SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger><SelectContent>{data.cats.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select>
         <Select value={form.centro_custo_id} onValueChange={v => setForm({ ...form, centro_custo_id: v })}><SelectTrigger><SelectValue placeholder="Centro de custo" /></SelectTrigger><SelectContent>{data.centers.map(c => <SelectItem key={c.id} value={c.id}>{centerLabel(c, data.works)}</SelectItem>)}</SelectContent></Select>
         <Input inputMode="decimal" placeholder="Valor (R$)" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} required />
-        <Input type="date" className="font-mono" value={form.vencimento} onChange={e => setForm({ ...form, vencimento: e.target.value })} required />
+        <label className="space-y-1 text-xs text-muted-foreground">Data de vencimento<Input type="date" className="font-mono" value={form.vencimento} onChange={e => setForm({ ...form, vencimento: e.target.value })} required /></label>
+        <Input placeholder="Nº da NF / cupom" value={form.numero_documento} onChange={e => setForm({ ...form, numero_documento: e.target.value })} />
+        <div className="flex items-center gap-2 md:col-span-2 xl:col-span-2">
+          <input ref={nfInput} type="file" accept=".pdf,image/*" className="hidden" onChange={e => { setNf(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+          <Button type="button" variant="outline" onClick={() => nfInput.current?.click()}><Paperclip />{nf ? "Trocar anexo" : "Anexar NF ou cupom fiscal"}</Button>
+          {nf && <span className="truncate text-xs">{nf.name}</span>}
+          {nf && <Button type="button" variant="ghost" size="sm" onClick={() => setNf(null)}>Remover</Button>}
+        </div>
+        {!nf && <Textarea className="md:col-span-2 xl:col-span-3" placeholder="Sem NF ou cupom? Escreva a justificativa (obrigatória)" value={form.justificativa} onChange={e => setForm({ ...form, justificativa: e.target.value })} />}
         <Button disabled={create.isPending} className="xl:col-span-6"><Plus />{create.isPending ? "Registrando…" : "Registrar compra pendente"}</Button>
       </form>
-    </section>}
-
-    {canCreate && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
-      <h2 className="font-display text-xl font-bold">Importar DDA</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Exporte a lista de títulos do internet banking como planilha (CSV/XLSX) ou PDF e envie aqui. Cada título vira uma compra pendente.</p>
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <Select value={ddaCenter} onValueChange={setDdaCenter}><SelectTrigger><SelectValue placeholder="Centro de custo padrão" /></SelectTrigger><SelectContent>{data.centers.map(c => <SelectItem key={c.id} value={c.id}>{centerLabel(c, data.works)}</SelectItem>)}</SelectContent></Select>
-        <Select value={ddaCategoria} onValueChange={setDdaCategoria}><SelectTrigger><SelectValue placeholder="Categoria padrão" /></SelectTrigger><SelectContent>{data.cats.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select>
-        <input ref={ddaInput} type="file" accept=".xlsx,.xls,.csv,.pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadDda(f); e.target.value = ""; }} />
-        <Button type="button" variant="outline" disabled={ddaReading} onClick={() => ddaInput.current?.click()}>{ddaReading ? <LoaderCircle className="animate-spin" /> : <Upload />}{ddaReading ? "Lendo…" : "Enviar planilha ou PDF de DDA"}</Button>
-      </div>
     </section>}
 
     {(() => { const reembolsar = data.compras.filter(c => c.origem === "comprovante" && (c.status === "pendente" || c.status === "aprovada")).reduce((s, c) => s + c.valor, 0); return reembolsar > 0 && <section className="border-t-2 border-warning bg-warning/5 p-5"><p className="text-xs font-bold uppercase text-warning">Reembolso a funcionários</p><p className="mt-1 text-sm text-muted-foreground">Soma dos caixas (comprovantes) já distribuídos e ainda não pagos ao funcionário.</p><p className="mt-2 font-mono text-2xl font-bold">{brl.format(reembolsar)}</p></section>; })()}
 
     <section>
-      <div className="flex items-center justify-between"><h2 className="font-display text-xl font-bold">Contas a pagar</h2><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todos os status</SelectItem>{Object.entries(statusLabel).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select></div>
-      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[960px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Vencimento</th><th>Fornecedor</th><th>Descrição</th><th>Origem</th><th>Centro</th><th className="text-right">Valor</th><th>Status</th><th className="pr-3 text-right">Ações</th></tr></thead><tbody>
-        {shown.map(c => <tr key={c.id} className="border-b"><td className="p-3 font-mono">{dateBR(c.vencimento)}</td><td>{c.fornecedor}</td><td className="max-w-xs truncate">{c.descricao}</td><td><span className="text-xs text-muted-foreground">{c.origem === "comprovante" ? "Reembolso" : c.origem === "dda" ? "DDA" : "Manual"}</span></td><td>{data.centers.find(x => x.id === c.centro_custo_id)?.nome ?? "—"}</td><td className="text-right font-mono font-semibold">{brl.format(c.valor)}</td><td><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td className="pr-3 text-right"><div className="flex justify-end gap-1">
+      <div className="flex items-center justify-between"><div><h2 className="font-display text-xl font-bold">Contas a pagar</h2><p className="text-xs text-muted-foreground">Ordenadas pelo vencimento, do mais próximo ao mais distante.</p></div><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="abertas">A pagar (pendentes e aprovadas)</SelectItem><SelectItem value="todas">Todas</SelectItem>{Object.entries(statusLabel).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select></div>
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1040px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Vencimento</th><th>Descrição</th><th>Nº NF</th><th>Pagamento</th><th className="text-right">Valor</th><th>Status</th><th>NF</th><th className="pr-3 text-right">Ações</th></tr></thead><tbody>
+        {shown.map(c => <tr key={c.id} className="border-b"><td className="p-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}{c.justificativa ? ` · Sem NF: ${c.justificativa}` : ""}</span></td><td className="font-mono text-xs">{c.numero_documento ?? "—"}</td><td className="font-mono">{c.data_pagamento ? dateBR(c.data_pagamento) : "—"}</td><td className="text-right font-mono font-semibold">{brl.format(c.valor)}</td><td><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td>{c.anexo_path ? <div className="flex gap-1"><Button size="icon" variant="ghost" aria-label="Visualizar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path))}><Eye /></Button><Button size="icon" variant="ghost" aria-label="Baixar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path), true)}><Download /></Button></div> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="pr-3 text-right"><div className="flex justify-end gap-1">
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Aprovar" onClick={() => approve.mutate(c.id)}><CheckCircle2 /></Button>}
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Rejeitar" onClick={() => reject.mutate(c.id)}><XCircle /></Button>}
           {isAdmin && c.status === "aprovada" && <Button size="sm" onClick={() => markPaid.mutate({ id: c.id, valor: c.valor })}>Marcar como paga</Button>}
           {isAdmin && (c.status === "pendente" || c.status === "aprovada") && <Button size="sm" variant="ghost" onClick={() => confirm("Cancelar esta compra?") && cancel.mutate(c.id)}>Cancelar</Button>}
         </div></td></tr>)}
-        {shown.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">Nenhuma compra encontrada.</td></tr>}
+        {shown.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">Nenhuma conta encontrada.</td></tr>}
       </tbody></table></div>
     </section>
+    <Dialog open={Boolean(preview)} onOpenChange={o => !o && setPreview(null)}><DialogContent className="h-[90vh] max-w-5xl"><DialogHeader><DialogTitle>{preview?.name}</DialogTitle></DialogHeader>{preview?.type === "application/pdf" ? <iframe src={preview.url} title={preview.name} className="h-full w-full" /> : preview && <img src={preview.url} alt={preview.name} className="h-full w-full object-contain" />}</DialogContent></Dialog>
   </div>;
 }

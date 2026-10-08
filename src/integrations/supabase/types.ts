@@ -737,6 +737,7 @@ export type Database = {
           hash_arquivo: string | null
           id: string
           importacao_id: string | null
+          justificativa: string | null
           lancamento_id: string | null
           linha_digitavel: string | null
           numero_documento: string | null
@@ -764,6 +765,7 @@ export type Database = {
           importacao_id?: string | null
           lancamento_id?: string | null
           linha_digitavel?: string | null
+          justificativa?: string | null
           numero_documento?: string | null
           obra_id?: string | null
           observacoes?: string | null
@@ -789,6 +791,7 @@ export type Database = {
           importacao_id?: string | null
           lancamento_id?: string | null
           linha_digitavel?: string | null
+          justificativa?: string | null
           numero_documento?: string | null
           obra_id?: string | null
           observacoes?: string | null
