@@ -57,11 +57,11 @@ export function Purchases() {
         const { error: ue } = await supabase.storage.from("compras").upload(anexoPath, nf, { contentType: nf.type || "application/octet-stream" });
         if (ue) throw ue;
       }
-      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, anexo_path: anexoPath, justificativa: nf ? null : form.justificativa.trim(), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
+      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, anexo_path: anexoPath, ...(nf ? {} : { justificativa: form.justificativa.trim() }), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
       if (ie) { if (anexoPath) await supabase.storage.from("compras").remove([anexoPath]); throw ie; }
     },
     onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNf(null); qc.invalidateQueries({ queryKey: ["compras"] }); },
-    onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível registrar a compra."),
+    onError: e => toast.error((e as { message?: string })?.message ?? "Não foi possível registrar a compra."),
   });
 
   const approve = useMutation({
