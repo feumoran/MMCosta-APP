@@ -1243,6 +1243,8 @@ export type Database = {
           created_by: string | null
           data_admissao: string
           data_desligamento: string | null
+          ferias_fim: string | null
+          ferias_inicio: string | null
           id: string
           nome: string
           observacoes: string | null
@@ -1255,6 +1257,8 @@ export type Database = {
           created_by?: string | null
           data_admissao: string
           data_desligamento?: string | null
+          ferias_fim?: string | null
+          ferias_inicio?: string | null
           id?: string
           nome: string
           observacoes?: string | null
@@ -1267,6 +1271,8 @@ export type Database = {
           created_by?: string | null
           data_admissao?: string
           data_desligamento?: string | null
+          ferias_fim?: string | null
+          ferias_inicio?: string | null
           id?: string
           nome?: string
           observacoes?: string | null
@@ -2002,9 +2008,10 @@ export type Database = {
       funcionario_documento_categoria:
         | "pessoal"
         | "contrato"
-        | "mr"
+        | "nr"
         | "aso"
         | "outros"
+        | "exame_medico"
       importacao_status:
         | "processando"
         | "concluida"
@@ -2175,9 +2182,10 @@ export const Constants = {
       funcionario_documento_categoria: [
         "pessoal",
         "contrato",
-        "mr",
+        "nr",
         "aso",
         "outros",
+        "exame_medico",
       ],
       importacao_status: [
         "processando",

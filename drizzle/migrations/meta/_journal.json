@@ -8,6 +8,13 @@
       "when": 1791479121171,
       "tag": "0000_documentos_fgts_gps_holerite",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791479135222,
+      "tag": "0001_funcionarios_nr_exame_ferias",
+      "breakpoints": true
     }
   ]
 }
