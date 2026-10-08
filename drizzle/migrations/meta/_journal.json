@@ -15,6 +15,13 @@
       "when": 1791479135222,
       "tag": "0001_funcionarios_nr_exame_ferias",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791479150040,
+      "tag": "0002_funcionarios_ferias_limite_compatibilidade",
+      "breakpoints": true
     }
   ]
 }

@@ -1245,6 +1245,7 @@ export type Database = {
           data_desligamento: string | null
           ferias_fim: string | null
           ferias_inicio: string | null
+          ferias_limite: string | null
           id: string
           nome: string
           observacoes: string | null
@@ -1259,6 +1260,7 @@ export type Database = {
           data_desligamento?: string | null
           ferias_fim?: string | null
           ferias_inicio?: string | null
+          ferias_limite?: string | null
           id?: string
           nome: string
           observacoes?: string | null
@@ -1273,6 +1275,7 @@ export type Database = {
           data_desligamento?: string | null
           ferias_fim?: string | null
           ferias_inicio?: string | null
+          ferias_limite?: string | null
           id?: string
           nome?: string
           observacoes?: string | null
