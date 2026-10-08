@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Receipts } from "@/components/erp/comprovantes";
+import { Purchases } from "@/components/erp/compras";
 
 export const Route = createFileRoute("/_authenticated/comprovantes")({
   head: () => ({
@@ -12,5 +13,5 @@ export const Route = createFileRoute("/_authenticated/comprovantes")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Receipts,
+  component: () => <><Receipts /><div className="mx-auto mt-10 max-w-[1600px] px-4 pb-10 lg:px-8"><Purchases formOnly /></div></>,
 });
