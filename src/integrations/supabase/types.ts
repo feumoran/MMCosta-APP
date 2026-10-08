@@ -1995,6 +1995,9 @@ export type Database = {
         | "art_rrt"
         | "laudo_tecnico"
         | "nota_fiscal"
+        | "fgts"
+        | "gps_darf"
+        | "holerite_assinado"
         | "outros"
       funcionario_documento_categoria:
         | "pessoal"
@@ -2164,6 +2167,9 @@ export const Constants = {
         "art_rrt",
         "laudo_tecnico",
         "nota_fiscal",
+        "fgts",
+        "gps_darf",
+        "holerite_assinado",
         "outros",
       ],
       funcionario_documento_categoria: [

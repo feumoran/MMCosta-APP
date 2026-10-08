@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";import { Input } from "@/compone
 import { Dialog,DialogContent,DialogHeader,DialogTitle } from "@/components/ui/dialog";
 
 type Cat=Database["public"]["Enums"]["documento_categoria"];
-const labels:Record<Cat,string>={contrato:"Contrato",projeto_prancha:"Projeto/Prancha",art_rrt:"ART/RRT",laudo_tecnico:"Laudo técnico",nota_fiscal:"Nota fiscal",outros:"Outros"};
+const labels:Record<Cat,string>={contrato:"Contrato",projeto_prancha:"Projeto/Prancha",art_rrt:"ART/RRT",laudo_tecnico:"Laudo técnico",nota_fiscal:"Nota fiscal",fgts:"FGTS",gps_darf:"GPS - DARF único",holerite_assinado:"Holerite assinado",outros:"Outros"};
 const ext=(name:string)=>name.split(".").pop()?.toUpperCase()??"ARQ";
 function Icon({name,type}:{name:string;type:string}){if(type.startsWith("image/"))return <FileImage/>;if(type.includes("pdf")||type.includes("word"))return <FileText/>;if(type.includes("sheet")||/xlsx?|csv/i.test(name))return <FileSpreadsheet/>;return <File/>}
 export function Documents({obraId}:{obraId:string}){const qc=useQueryClient(),input=useRef<HTMLInputElement>(null),[category,setCategory]=useState<Cat>("contrato"),[filter,setFilter]=useState("todas"),[search,setSearch]=useState(""),[files,setFiles]=useState<File[]>([]),[progress,setProgress]=useState(0),[preview,setPreview]=useState<{url:string;type:string;name:string}|null>(null);
