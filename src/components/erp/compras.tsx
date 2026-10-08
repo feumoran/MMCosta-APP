@@ -22,9 +22,7 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
   const [form, setForm] = useState(emptyForm);
   const [nf, setNf] = useState<File | null>(null);
   const nfInput = useRef<HTMLInputElement>(null);
-  const [statusFilter, setStatusFilter] = useState("abertas");
-  const [showForm, setShowForm] = useState(formOnly);
-  const [preview, setPreview] = useState<{ url: string; type: string; name: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState("abertas");  const [preview, setPreview] = useState<{ url: string; type: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["compras"], queryFn: async () => {
@@ -110,7 +108,7 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
   const fileName = (path: string) => path.split("/").pop()?.replace(/^[0-9a-f-]{36}-/, "") ?? "anexo";
 
   return <div className="space-y-8">
-    {canCreate && showForm && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
+    {canCreate && formOnly && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
       <h2 className="font-display text-xl font-bold">Nova compra</h2>
       <form onSubmit={e => { e.preventDefault(); create.mutate(); }} className="mt-4 grid gap-3 rounded-lg bg-muted p-4 md:grid-cols-2 xl:grid-cols-6">
         <Input placeholder="Fornecedor" value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} required />
@@ -134,7 +132,7 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
     {!formOnly && (() => { const reembolsar = data.compras.filter(c => c.origem === "comprovante" && (c.status === "pendente" || c.status === "aprovada")).reduce((s, c) => s + c.valor, 0); return reembolsar > 0 && <section className="border-t-2 border-warning bg-warning/5 p-5"><p className="text-xs font-bold uppercase text-warning">Reembolso a funcionários</p><p className="mt-1 text-sm text-muted-foreground">Soma dos caixas (comprovantes) já distribuídos e ainda não pagos ao funcionário.</p><p className="mt-2 font-mono text-2xl font-bold">{brl.format(reembolsar)}</p></section>; })()}
 
     {!formOnly && <section>
-      <div className="flex items-center justify-between"><div><h2 className="font-display text-xl font-bold">Contas a pagar</h2><p className="text-xs text-muted-foreground">Ordenadas pelo vencimento, do mais próximo ao mais distante.</p></div><div className="flex items-center gap-2">{canCreate && <Button onClick={() => setShowForm(s => !s)}><Plus />{showForm ? "Fechar" : "Nova compra"}</Button>}<Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="abertas">A pagar (pendentes e aprovadas)</SelectItem><SelectItem value="todas">Todas</SelectItem>{Object.entries(statusLabel).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select></div></div>
+      <div className="flex items-center justify-between"><div><h2 className="font-display text-xl font-bold">Contas a pagar</h2><p className="text-xs text-muted-foreground">Ordenadas pelo vencimento, do mais próximo ao mais distante.</p></div><div className="flex items-center gap-2"><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="abertas">A pagar (pendentes e aprovadas)</SelectItem><SelectItem value="todas">Todas</SelectItem>{Object.entries(statusLabel).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select></div></div>
       <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1040px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Vencimento</th><th>Descrição</th><th>Nº NF</th><th>Pagamento</th><th className="text-right">Valor</th><th>Status</th><th>NF</th><th className="pr-3 text-right">Ações</th></tr></thead><tbody>
         {shown.map(c => <tr key={c.id} className="border-b"><td className="p-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}{c.justificativa ? ` · Sem NF: ${c.justificativa}` : ""}</span></td><td className="font-mono text-xs">{c.numero_documento ?? "—"}</td><td className="font-mono">{c.data_pagamento ? dateBR(c.data_pagamento) : "—"}</td><td className="text-right font-mono font-semibold">{brl.format(c.valor)}</td><td><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td>{c.anexo_path ? <div className="flex gap-1"><Button size="icon" variant="ghost" aria-label="Visualizar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path))}><Eye /></Button><Button size="icon" variant="ghost" aria-label="Baixar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path), true)}><Download /></Button></div> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="pr-3 text-right"><div className="flex justify-end gap-1">
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Aprovar" onClick={() => approve.mutate(c.id)}><CheckCircle2 /></Button>}
