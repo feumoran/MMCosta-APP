@@ -1,5 +1,8 @@
 # Roadmap — ERP MMcosta
 
+## Migrações de 08/10/2026
+- [x] Aplicar 20261008100000, 20261008110000 e 20261008130000; adicionar ferias_limite de 20261008120000 preservando e depreciando as colunas antigas por compatibilidade; atualizar tipos e recarregar o cache do PostgREST
+
 ## Etapa 1 — fundação solicitada
 - [x] Corrigir convites de usuários, boletins parciais e completar ações dos cadastros
 - [x] Incorporar a importação do cliente dentro de Medições e criar o comparativo entre medição interna e recebida

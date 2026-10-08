@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791479121171,
+      "tag": "0000_documentos_fgts_gps_holerite",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791479135222,
+      "tag": "0001_funcionarios_nr_exame_ferias",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791479150040,
+      "tag": "0002_funcionarios_ferias_limite_compatibilidade",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791479165448,
+      "tag": "0003_compras_justificativa",
+      "breakpoints": true
+    }
+  ]
+}
