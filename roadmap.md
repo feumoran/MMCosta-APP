@@ -1,5 +1,9 @@
 # Roadmap — ERP MMcosta
 
+## Segurança das dependências — 13/10/2026
+- [x] Atualizar dependências vulneráveis e verificar todas as resoluções no lockfile textual (source-map-js 1.2.2, seroval 1.6.9, js-yaml 4.3.2 e xlsx oficial 0.20.3)
+- [x] Executar nova análise de dependências e confirmar compilação e leitura/exportação de planilhas (XLSX, XLS e CSV); distribuição oficial xlsx validada diretamente, pois o scanner não verifica tarballs
+
 ## Atualização de 13/10/2026
 - [x] Conferir as quatro migrações de 08/10 já aplicadas e executar a limpeza 20261013100000 (212 custos sem alocação removidos)
 - [x] Regenerar tipos, confirmar zero custos sem alocação restantes e verificar compilação sem erros

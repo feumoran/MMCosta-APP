@@ -13,3 +13,4 @@
 - Obra status is synchronized from its latest physical progress mark in the database, so 100% completion stays consistent across every screen.
 - Employee vacation tracking uses ferias_limite; retain deprecated ferias_inicio and ferias_fim columns for backward compatibility and to avoid destructive schema changes.
 - Boletim detail SELECT policies must use the same assigned-role predicate as boletins and boletim_itens; unconditional authenticated reads expose details to accounts without an application role.
+- Install xlsx from the official SheetJS release tarball rather than the stale npm release, so spreadsheet imports use a security-patched implementation.
