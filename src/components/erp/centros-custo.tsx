@@ -31,7 +31,7 @@ function TeamCosts({ costs, employees, total }: { costs: TeamCost[]; employees: 
   const monthLabel = (month: string) => new Date(`${month}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   return <>
     <button type="button" onClick={() => toggle("team")} className="mt-7 flex w-full items-end justify-between border-b pb-3 text-left"><div><h3 className="flex items-center gap-2 font-display text-lg font-bold"><Users className="size-4"/>Total equipe</h3><p className="text-xs text-muted-foreground">Acumulado por funcionário no mês · clique para abrir</p></div><span className="font-mono text-sm font-semibold">{brl.format(total)}</span></button>
-    {open.team && <div>
+    {open["team"] && <div>
       {months.length === 0 && <p className="border-b py-8 text-center text-sm text-muted-foreground">Nenhum custo de equipe neste período.</p>}
       {months.map(({ month, list, total: monthTotal }) => <div key={month}>
         <div className="flex items-center justify-between bg-muted/50 px-3 py-2 text-[11px] font-semibold uppercase text-muted-foreground"><span>{monthLabel(month)}</span><span className="font-mono">{brl.format(monthTotal)}</span></div>

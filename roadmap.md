@@ -1,5 +1,9 @@
 # Roadmap — ERP MMcosta
 
+## Atualização de 13/10/2026
+- [x] Conferir as quatro migrações de 08/10 já aplicadas e executar a limpeza 20261013100000 (212 custos sem alocação removidos)
+- [x] Regenerar tipos, confirmar zero custos sem alocação restantes e verificar compilação sem erros
+
 ## Migrações de 08/10/2026
 - [x] Aplicar 20261008100000, 20261008110000 e 20261008130000; adicionar ferias_limite de 20261008120000 preservando e depreciando as colunas antigas por compatibilidade; atualizar tipos e recarregar o cache do PostgREST
 
