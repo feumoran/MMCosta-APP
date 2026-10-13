@@ -1,5 +1,9 @@
 # Roadmap — ERP MMcosta
 
+## Segurança das dependências — 13/10/2026
+- [ ] Atualizar dependências vulneráveis e verificar todas as resoluções no lockfile textual
+- [ ] Executar nova análise de dependências e confirmar compilação e leitura/exportação de planilhas
+
 ## Atualização de 13/10/2026
 - [x] Conferir as quatro migrações de 08/10 já aplicadas e executar a limpeza 20261013100000 (212 custos sem alocação removidos)
 - [x] Regenerar tipos, confirmar zero custos sem alocação restantes e verificar compilação sem erros
