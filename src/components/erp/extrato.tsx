@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Center = { id: string; nome: string; tipo: string; obra_id: string | null };
+type Row = { id: string; data: string; descricao: string; centro_custo_id: string; tipo: "recebimento" | "pagamento"; valor: number };
+
+const monthLabel = (month: string) => new Date(`${month}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
 export function Statement() {
   const [from, setFrom] = useState("");
@@ -14,13 +17,26 @@ export function Statement() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["extrato"], queryFn: async () => {
-      const [{ data: entries, error: ee }, { data: centers }, { data: works }] = await Promise.all([
-        supabase.from("lancamentos").select("*").is("deleted_at", null).order("data", { ascending: true }).order("created_at", { ascending: true }),
+      const [{ data: entries, error: ee }, { data: centers }, { data: works }, { data: teamCosts, error: te }] = await Promise.all([
+        supabase.from("lancamentos").select("id,data,descricao,centro_custo_id,tipo,valor").is("deleted_at", null).order("data", { ascending: true }).order("created_at", { ascending: true }),
         supabase.from("centros_custo").select("id,nome,tipo,obra_id").eq("ativo", true),
         supabase.from("obras").select("id,nome"),
+        supabase.from("funcionario_custos_diarios").select("centro_custo_id,data,valor_diaria"),
       ]);
       if (ee) throw ee;
-      return { entries: entries ?? [], centers: (centers ?? []) as Center[], works: works ?? [] };
+      if (te) throw te;
+      // Mesma regra dos centros de custo: o custo diário da equipe entra como saída (agrupado por centro e mês).
+      const team = new Map<string, Row>();
+      for (const cost of teamCosts ?? []) {
+        const month = cost.data.slice(0, 7);
+        const key = `${cost.centro_custo_id}-${month}`;
+        const current = team.get(key) ?? { id: `equipe-${key}`, data: cost.data, descricao: `Equipe — custo de ${monthLabel(month)}`, centro_custo_id: cost.centro_custo_id, tipo: "pagamento" as const, valor: 0 };
+        current.valor += Number(cost.valor_diaria);
+        if (cost.data > current.data) current.data = cost.data;
+        team.set(key, current);
+      }
+      const rows: Row[] = [...(entries ?? []).map(l => ({ ...l, valor: Number(l.valor) }) as Row), ...team.values()].sort((a, b) => a.data.localeCompare(b.data));
+      return { entries: rows, centers: (centers ?? []) as Center[], works: works ?? [] };
     },
   });
 
@@ -38,7 +54,7 @@ export function Statement() {
   const totalSaidas = rows.filter(r => r.tipo === "pagamento").reduce((s, r) => s + r.valor, 0);
 
   return <div className="space-y-6">
-    <header><h2 className="font-display text-xl font-bold">Extrato consolidado</h2><p className="mt-1 text-sm text-muted-foreground">Todos os lançamentos de todas as obras e centros, em ordem cronológica, com saldo acumulado.</p></header>
+    <header><h2 className="font-display text-xl font-bold">Extrato consolidado</h2><p className="mt-1 text-sm text-muted-foreground">Todos os lançamentos de todas as obras e centros, em ordem cronológica, com saldo acumulado.</p><p className="mt-1 text-xs text-muted-foreground">Entram nos totais: lançamentos não excluídos (recebimentos e pagamentos) e o custo da equipe por funcionário alocado — a mesma regra dos Centros de custo. Contas a pagar só entram depois de marcadas como pagas.</p></header>
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto_auto]">
       <Input type="date" className="font-mono" value={from} onChange={e => setFrom(e.target.value)} aria-label="De" />
       <Input type="date" className="font-mono" value={to} onChange={e => setTo(e.target.value)} aria-label="Até" />
@@ -46,8 +62,8 @@ export function Statement() {
       <div className="rounded-md bg-good/10 px-4 py-2 text-xs text-good">Entradas <strong className="ml-2 font-mono">{brl.format(totalEntradas)}</strong></div>
       <div className="rounded-md bg-destructive/10 px-4 py-2 text-xs text-destructive">Saídas <strong className="ml-2 font-mono">{brl.format(totalSaidas)}</strong></div>
     </div>
-    <div className="overflow-x-auto"><table className="w-full min-w-[880px] text-left text-sm"><thead className="border-y bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Data</th><th>Descrição</th><th>Centro</th><th className="text-right">Entrada</th><th className="text-right">Saída</th><th className="text-right">Saldo</th></tr></thead><tbody>
-      {rows.map(r => <tr key={r.id} className="border-b"><td className="p-3 font-mono text-xs">{dateBR(r.data)}</td><td className="max-w-xs truncate">{r.descricao}</td><td>{data.centers.find(c => c.id === r.centro_custo_id)?.nome ?? "—"}</td><td className="text-right font-mono text-good">{r.tipo === "recebimento" ? brl.format(r.valor) : ""}</td><td className="text-right font-mono text-destructive">{r.tipo === "pagamento" ? brl.format(r.valor) : ""}</td><td className="text-right font-mono font-semibold">{brl.format(r.saldo)}</td></tr>)}
+    <div className="overflow-x-auto"><table className="w-full min-w-[880px] text-left text-sm"><thead className="border-y bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Data</th><th className="px-3">Descrição</th><th className="px-3">Centro</th><th className="px-3 text-right">Entrada</th><th className="px-3 text-right">Saída</th><th className="px-3 text-right">Saldo</th></tr></thead><tbody>
+      {rows.map(r => <tr key={r.id} className="border-b"><td className="px-3 py-3 font-mono text-xs">{dateBR(r.data)}</td><td className="max-w-xs truncate px-3">{r.descricao}</td><td className="px-3">{data.centers.find(c => c.id === r.centro_custo_id)?.nome ?? "—"}</td><td className="px-3 text-right font-mono text-good">{r.tipo === "recebimento" ? brl.format(r.valor) : ""}</td><td className="px-3 text-right font-mono text-destructive">{r.tipo === "pagamento" ? brl.format(r.valor) : ""}</td><td className="px-3 text-right font-mono font-semibold">{brl.format(r.saldo)}</td></tr>)}
       {rows.length === 0 && <tr><td colSpan={6} className="p-10 text-center text-muted-foreground">Nenhum lançamento no período.</td></tr>}
     </tbody></table></div>
   </div>;

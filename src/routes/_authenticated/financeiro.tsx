@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 
 function FinancePage() {
   const { aba, centro } = Route.useSearch();
+  const navigate = useNavigate();
   const { data: access, isLoading } = useQuery({
     queryKey: ["financeiro-access"], queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -40,7 +41,7 @@ function FinancePage() {
 
   return <div className="space-y-6">
     <header><p className="text-xs font-bold uppercase text-primary">Empresa</p><h1 className="font-display text-3xl font-bold">Financeiro</h1></header>
-    <Tabs defaultValue={aba}>
+    <Tabs value={aba} onValueChange={(value) => navigate({ to: "/financeiro", search: { aba: value as "contas" | "centros" | "extrato" }, replace: true })}>
       <TabsList><TabsTrigger value="contas">Contas a pagar</TabsTrigger><TabsTrigger value="centros">Centros de custo</TabsTrigger><TabsTrigger value="extrato">Extrato</TabsTrigger></TabsList>
       <TabsContent value="contas" className="mt-6 space-y-10"><Purchases /></TabsContent>
       <TabsContent value="centros" className="mt-6"><CostCenters {...(centro ? { initialCenter: centro } : {})} /></TabsContent>
