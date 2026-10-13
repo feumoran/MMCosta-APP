@@ -13,7 +13,7 @@ export default defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ obra_id, limite }, ctx) => {
     const cloud = await supabaseForUser(ctx);
-    const { data: obra, error: workError } = await cloud.from("obras").select("id,nome").eq("id", obra_id).eq("ativo", true).maybeSingle().abortSignal(ctx.signal);
+    const { data: obra, error: workError } = await cloud.from("obras").select("id,nome").eq("id", obra_id).eq("ativo", true).abortSignal(ctx.signal).maybeSingle();
     if (workError || !obra) throw new ToolError("Obra não encontrada ou acesso indisponível.");
     const { data, error } = await cloud.from("medicoes").select("id,numero,status,origem,data_inicio,data_fim")
       .eq("obra_id", obra_id).is("deleted_at", null).order("numero", { ascending: false }).order("id").limit(limite).abortSignal(ctx.signal);

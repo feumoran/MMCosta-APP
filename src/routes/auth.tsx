@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, HardHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
 import logoAsset from "@/assets/mmcosta-logo.png.asset.json";
-export const Route=createFileRoute("/auth")({validateSearch:(search:Record<string,unknown>)=>({next:oauthReturnPath(search.next ?? "/visao-geral")}),head:()=>({meta:[{title:"Entrar | MMcosta Engenharia"},{name:"description",content:"Acesso ao sistema de gestão da MMcosta Engenharia."},{property:"og:title",content:"MMcosta Engenharia"},{property:"og:description",content:"Sistema de gestão de obras, produção e caixa."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),component:Auth});
-function Auth(){const nav=useNavigate(),router=useRouter();const {next}=Route.useSearch();const [mode,setMode]=useState<"entrar"|"criar"|"definir-senha">("entrar"),[nome,setNome]=useState(""),[email,setEmail]=useState(""),[senha,setSenha]=useState(""),[confirmar,setConfirmar]=useState(""),[showPassword,setShowPassword]=useState(false),[erro,setErro]=useState(""),[busy,setBusy]=useState(false),[sent,setSent]=useState(false),[checking,setChecking]=useState(true);
+export const Route=createFileRoute("/auth")({validateSearch:(search:Record<string,unknown>):{next?:string}=>({next:oauthReturnPath(search["next"] ?? "/visao-geral")}),head:()=>({meta:[{title:"Entrar | MMcosta Engenharia"},{name:"description",content:"Acesso ao sistema de gestão da MMcosta Engenharia."},{property:"og:title",content:"MMcosta Engenharia"},{property:"og:description",content:"Sistema de gestão de obras, produção e caixa."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}]}),component:Auth});
+function Auth(){const router=useRouter();const search=Route.useSearch();const next=search.next ?? "/visao-geral";const [mode,setMode]=useState<"entrar"|"criar"|"definir-senha">("entrar"),[nome,setNome]=useState(""),[email,setEmail]=useState(""),[senha,setSenha]=useState(""),[confirmar,setConfirmar]=useState(""),[showPassword,setShowPassword]=useState(false),[erro,setErro]=useState(""),[busy,setBusy]=useState(false),[sent,setSent]=useState(false),[checking,setChecking]=useState(true);
 
  useEffect(()=>{
   const hash=window.location.hash;

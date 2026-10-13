@@ -14,7 +14,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     { property: "og:description", content: "Autorização segura de agentes para consultas no MMcosta Flow." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: (search: Record<string, unknown>) => ({ authorization_id: typeof search.authorization_id === "string" ? search.authorization_id : "" }),
+  validateSearch: (search: Record<string, unknown>) => ({ authorization_id: typeof search["authorization_id"] === "string" ? search["authorization_id"] : "" }),
   beforeLoad: async ({ search, location }) => {
     if (!search.authorization_id) throw new Error("Solicitação de autorização ausente. Inicie a conexão novamente no agente.");
     const { data, error } = await supabase.auth.getSession();
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     return data;
   },
   pendingComponent: () => <main className="grid min-h-screen place-items-center text-muted-foreground">Verificando autorização…</main>,
-  errorComponent: ({ error }) => <main className="grid min-h-screen place-items-center bg-background p-6"><div className="max-w-md space-y-4"><h1 className="text-2xl font-bold">Não foi possível autorizar</h1><p role="alert" className="text-sm text-destructive">{error.message}</p><Button asChild variant="outline"><a href="/auth">Voltar ao acesso</a></Button></div></main>,
+  errorComponent: ({ error }) => <main className="grid min-h-screen place-items-center bg-background p-6"><div className="max-w-md space-y-4"><h1 className="text-2xl font-bold">Não foi possível autorizar</h1><p role="alert" className="text-sm text-destructive">{error instanceof Error ? error.message : "Não foi possível verificar esta autorização."}</p><Button asChild variant="outline"><a href="/auth">Voltar ao acesso</a></Button></div></main>,
   component: Consent,
 });
 

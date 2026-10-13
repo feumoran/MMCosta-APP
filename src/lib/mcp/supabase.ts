@@ -7,8 +7,8 @@ export async function supabaseForUser(ctx: ToolContext) {
   const token = ctx.getToken();
   const userId = ctx.getUserId();
   if (!ctx.isAuthenticated() || !token || !userId) throw new ToolError("Entre com uma conta autorizada.");
-  const url = process.env["SUPABASE_URL"] ?? import.meta.env.VITE_SUPABASE_URL;
-  let key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const url = process.env["SUPABASE_URL"] ?? import.meta.env["VITE_SUPABASE_URL"];
+  let key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (!key && process.env["SUPABASE_PUBLISHABLE_KEYS"]) {
     try {
       const keys: unknown = JSON.parse(process.env["SUPABASE_PUBLISHABLE_KEYS"] ?? "{}");
