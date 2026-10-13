@@ -34,7 +34,10 @@ export function parseDateInput(text: string): string | null {
   const value = text.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const match = value.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-  return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : null;
+  if (!match) return null;
+  const [, day, month, year] = match;
+  if (!day || !month || !year) return null;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 /** "1.234,56" ou "1234.56" → número (NaN se inválido). */
