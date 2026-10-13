@@ -76,8 +76,10 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
   const markPaid = useMutation({
     mutationFn: async (c: { id: string; valor: number }) => {
       const dataTexto = prompt("Data do pagamento (dd-mm-aaaa)", today().split("-").reverse().join("-")); if (!dataTexto) return;
-      const m = dataTexto.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/); if (!m) throw new Error("Data inválida. Use dd-mm-aaaa.");
-      const dataPagamento = `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+      const m = dataTexto.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      const [, dia, mes, ano] = m ?? [];
+      if (!dia || !mes || !ano) throw new Error("Data inválida. Use dd-mm-aaaa.");
+      const dataPagamento = `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
       const valorTexto = prompt("Valor efetivamente pago (R$)", String(c.valor).replace(".", ",")); if (valorTexto === null) return;
       const valor = Number(valorTexto.replace(",", ".")); if (!Number.isFinite(valor) || valor <= 0) throw new Error("Valor inválido.");
       const { error } = await supabase.rpc("marcar_compra_paga" as never, { _compra: c.id, _data: dataPagamento, _valor: valor } as never);
