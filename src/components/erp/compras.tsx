@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, dateBR } from "@/lib/erp";
 import { usePrivateFiles } from "@/lib/private-files";
+import { askConfirm, askFields, parseDateInput, parseMoneyInput } from "@/components/erp/dialogs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,23 +72,23 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível aprovar."),
   });
   const reject = useMutation({
-    mutationFn: async (id: string) => { const motivo = prompt("Motivo da rejeição (opcional)") ?? undefined; const { error } = await supabase.rpc("rejeitar_compra" as never, { _compra: id, _motivo: motivo } as never); if (error) throw error; },
-    onSuccess: () => { toast.success("Compra rejeitada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => { const answer = await askFields({ title: "Rejeitar compra", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], fields: [{ name: "motivo", label: "Motivo da rejeição (opcional)" }], confirmLabel: "Rejeitar", destructive: true }); if (!answer) return false; const motivo = answer.motivo.trim() || undefined; const id = c.id; const { error } = await supabase.rpc("rejeitar_compra" as never, { _compra: id, _motivo: motivo } as never); if (error) throw error; return true; },
+    onSuccess: (done) => { if (!done) return; toast.success("Compra rejeitada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível rejeitar."),
   });
   const markPaid = useMutation({
-    mutationFn: async (c: { id: string; valor: number }) => {
-      const dataTexto = prompt("Data do pagamento (dd-mm-aaaa)", today().split("-").reverse().join("-")); if (!dataTexto) return;
-      const m = dataTexto.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-      const [, dia, mes, ano] = m ?? [];
-      if (!dia || !mes || !ano) throw new Error("Data inválida. Use dd-mm-aaaa.");
-      const dataPagamento = `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
-      const valorTexto = prompt("Valor efetivamente pago (R$)", String(c.valor).replace(".", ",")); if (valorTexto === null) return;
-      const valor = Number(valorTexto.replace(",", ".")); if (!Number.isFinite(valor) || valor <= 0) throw new Error("Valor inválido.");
+    mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => {
+      const answer = await askFields({ title: "Marcar como paga", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor da conta", value: brl.format(c.valor) }], fields: [{ name: "data", label: "Data do pagamento", type: "date", defaultValue: today().split("-").reverse().join("-"), required: true }, { name: "valor", label: "Valor pago (R$)", type: "money", defaultValue: String(c.valor).replace(".", ","), required: true }], confirmLabel: "Confirmar pagamento" });
+      if (!answer) return false;
+      const dataPagamento = parseDateInput(answer.data);
+      const valor = parseMoneyInput(answer.valor);
+      if (!dataPagamento) throw new Error("Data inválida. Use dd-mm-aaaa.");
+      if (!Number.isFinite(valor) || valor <= 0) throw new Error("Valor inválido.");
       const { error } = await supabase.rpc("marcar_compra_paga" as never, { _compra: c.id, _data: dataPagamento, _valor: valor } as never);
       if (error) throw error;
+      return true;
     },
-    onSuccess: () => { toast.success("Compra paga. Lançamento criado no fluxo de caixa."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["cost-centers-details"] }); qc.invalidateQueries({ queryKey: ["extrato"] }); },
+    onSuccess: (done) => { if (!done) return; toast.success("Compra paga. Lançamento criado no fluxo de caixa."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["cost-centers-details"] }); qc.invalidateQueries({ queryKey: ["extrato"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível marcar como paga."),
   });
   const cancel = useMutation({
@@ -140,9 +141,9 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
       <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1040px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Vencimento</th><th>Descrição</th><th>Nº NF</th><th>Pagamento</th><th className="text-right">Valor</th><th>Status</th><th>NF</th><th className="pr-3 text-right">Ações</th></tr></thead><tbody>
         {shown.map(c => <tr key={c.id} className="border-b"><td className="p-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}{c.justificativa ? ` · Sem NF: ${c.justificativa}` : ""}</span></td><td className="font-mono text-xs">{c.numero_documento ?? "—"}</td><td className="font-mono">{c.data_pagamento ? dateBR(c.data_pagamento) : "—"}</td><td className="text-right font-mono font-semibold">{brl.format(c.valor)}</td><td><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td>{c.anexo_path ? <div className="flex gap-1"><Button size="icon" variant="ghost" aria-label="Visualizar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path))}><Eye /></Button><Button size="icon" variant="ghost" aria-label="Baixar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path), true)}><Download /></Button></div> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="pr-3 text-right"><div className="flex justify-end gap-1">
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Aprovar" onClick={() => approve.mutate(c.id)}><CheckCircle2 /></Button>}
-          {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Rejeitar" onClick={() => reject.mutate(c.id)}><XCircle /></Button>}
-          {isAdmin && c.status === "aprovada" && <Button size="sm" onClick={() => markPaid.mutate({ id: c.id, valor: c.valor })}>Marcar como paga</Button>}
-          {isAdmin && (c.status === "pendente" || c.status === "aprovada") && <Button size="sm" variant="ghost" onClick={() => confirm("Cancelar esta compra?") && cancel.mutate(c.id)}>Cancelar</Button>}
+          {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Rejeitar" onClick={() => reject.mutate(c)}><XCircle /></Button>}
+          {isAdmin && c.status === "aprovada" && <Button size="sm" onClick={() => markPaid.mutate(c)}>Marcar como paga</Button>}
+          {isAdmin && (c.status === "pendente" || c.status === "aprovada") && <Button size="sm" variant="ghost" onClick={() => void askConfirm({ title: "Cancelar compra", description: "Esta compra deixará de aparecer entre as contas a pagar.", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Vencimento", value: dateBR(c.vencimento) }, { label: "Valor", value: brl.format(c.valor) }], confirmLabel: "Cancelar compra", destructive: true }).then(ok => ok && cancel.mutate(c.id))}>Cancelar</Button>}
         </div></td></tr>)}
         {shown.length === 0 && <tr><td colSpan={8} className="p-10 text-center text-muted-foreground">Nenhuma conta encontrada.</td></tr>}
       </tbody></table></div>
