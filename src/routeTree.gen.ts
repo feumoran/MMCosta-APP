@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedCentrosCustoRouteImport } from './routes/_authenticated/centros-custo'
 import { Route as AuthenticatedComprovantesRouteImport } from './routes/_authenticated/comprovantes'
@@ -22,6 +24,7 @@ import { Route as AuthenticatedVisaoGeralRouteImport } from './routes/_authentic
 import { Route as ApiLerBoletimRouteImport } from './routes/api/ler-boletim'
 import { Route as ApiLerComprovantesRouteImport } from './routes/api/ler-comprovantes'
 import { Route as ApiLerPlanilhaMedicaoRouteImport } from './routes/api/ler-planilha-medicao'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedObrasIndexRouteImport } from './routes/_authenticated/obras.index'
 import { Route as AuthenticatedObrasIdSecaoRouteImport } from './routes/_authenticated/obras/$id/$secao'
 import { Route as AuthenticatedObrasIdPainelRouteImport } from './routes/_authenticated/obras/$id/painel'
@@ -42,6 +45,17 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
   id: '/cadastros',
   path: '/cadastros',
@@ -96,6 +110,11 @@ const ApiLerPlanilhaMedicaoRoute = ApiLerPlanilhaMedicaoRouteImport.update({
   path: '/api/ler-planilha-medicao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedObrasIndexRoute = AuthenticatedObrasIndexRouteImport.update({
   id: '/obras/',
   path: '/obras/',
@@ -127,6 +146,8 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
@@ -137,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/obras/': typeof AuthenticatedObrasIndexRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -146,6 +168,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/comprovantes': typeof AuthenticatedComprovantesRoute
@@ -156,6 +180,7 @@ export interface FileRoutesByTo {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/obras': typeof AuthenticatedObrasIndexRoute
   '/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -167,6 +192,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/centros-custo': typeof AuthenticatedCentrosCustoRoute
   '/_authenticated/comprovantes': typeof AuthenticatedComprovantesRoute
@@ -177,6 +204,7 @@ export interface FileRoutesById {
   '/api/ler-boletim': typeof ApiLerBoletimRoute
   '/api/ler-comprovantes': typeof ApiLerComprovantesRoute
   '/api/ler-planilha-medicao': typeof ApiLerPlanilhaMedicaoRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/obras/': typeof AuthenticatedObrasIndexRoute
   '/_authenticated/obras/$id/$secao': typeof AuthenticatedObrasIdSecaoRoute
   '/_authenticated/obras/$id/painel': typeof AuthenticatedObrasIdPainelRoute
@@ -188,6 +216,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
@@ -198,6 +228,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/.lovable/oauth/consent'
     | '/obras/'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
@@ -207,6 +238,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/cadastros'
     | '/centros-custo'
     | '/comprovantes'
@@ -217,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/.lovable/oauth/consent'
     | '/obras'
     | '/obras/$id/$secao'
     | '/obras/$id/painel'
@@ -227,6 +261,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/cadastros'
     | '/_authenticated/centros-custo'
     | '/_authenticated/comprovantes'
@@ -237,6 +273,7 @@ export interface FileRouteTypes {
     | '/api/ler-boletim'
     | '/api/ler-comprovantes'
     | '/api/ler-planilha-medicao'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/obras/'
     | '/_authenticated/obras/$id/$secao'
     | '/_authenticated/obras/$id/painel'
@@ -248,9 +285,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiLerBoletimRoute: typeof ApiLerBoletimRoute
   ApiLerComprovantesRoute: typeof ApiLerComprovantesRoute
   ApiLerPlanilhaMedicaoRoute: typeof ApiLerPlanilhaMedicaoRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -276,6 +316,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/cadastros': {
@@ -346,6 +400,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ler-planilha-medicao'
       fullPath: '/api/ler-planilha-medicao'
       preLoaderRoute: typeof ApiLerPlanilhaMedicaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/obras/': {
@@ -419,9 +480,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiLerBoletimRoute: ApiLerBoletimRoute,
   ApiLerComprovantesRoute: ApiLerComprovantesRoute,
   ApiLerPlanilhaMedicaoRoute: ApiLerPlanilhaMedicaoRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
