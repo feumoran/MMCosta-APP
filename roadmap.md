@@ -49,6 +49,7 @@
 - [x] Validar migrações financeiras, atualizar tipos e eliminar o travamento de Centros de custo
 
 ## Integrações de agentes — 13/10/2026
-- [ ] Ativar acesso OAuth e consentimento com retorno ao login
-- [ ] Adicionar consultas MCP de obras e medições respeitando permissões
-- [ ] Adicionar leitura e abertura de obras no navegador; extrair catálogo e validar
+- [x] Ativar acesso OAuth e consentimento com retorno ao login
+- [x] Adicionar consultas MCP de obras e medições respeitando permissões
+- [x] Adicionar leitura e abertura de obras no navegador; extrair catálogo e validar bloqueio anônimo e retorno ao login
+- [ ] Confirmar consentimento completo e consultas com conta real — aguarda login do usuário no preview e republicação
