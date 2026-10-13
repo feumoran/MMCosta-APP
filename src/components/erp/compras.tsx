@@ -4,6 +4,7 @@ import { CheckCircle2, Download, Eye, Paperclip, Plus, XCircle } from "lucide-re
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, dateBR } from "@/lib/erp";
+import { usePrivateFiles } from "@/lib/private-files";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,7 @@ const centerLabel = (c: Center, works: { id: string; nome: string }[]) => c.tipo
 const emptyForm = { fornecedor: "", descricao: "", categoria: "", valor: "", vencimento: today(), centro_custo_id: "", numero_documento: "", justificativa: "" };
 
 export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
+  const privateFiles = usePrivateFiles();
   const qc = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [nf, setNf] = useState<File | null>(null);
@@ -95,11 +97,11 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
   });
 
   const openNf = async (path: string, name: string, download = false) => {
-    const { data: signed, error: se } = await supabase.storage.from("compras").createSignedUrl(path, 300, download ? { download: name } : undefined);
-    if (se || !signed) { toast.error("Não foi possível abrir o anexo."); return; }
+    try {
     const lower = path.toLowerCase();
-    if (!download && (/\.(png|jpe?g|webp|gif|heic)$/.test(lower) || lower.endsWith(".pdf"))) { setPreview({ url: signed.signedUrl, type: lower.endsWith(".pdf") ? "application/pdf" : "image/*", name }); return; }
-    const a = document.createElement("a"); a.href = signed.signedUrl; a.download = name; a.click();
+    if (!download && (/\.(png|jpe?g|webp|gif|heic)$/.test(lower) || lower.endsWith(".pdf"))) { setPreview({ url: await privateFiles.preview("compras", path), type: lower.endsWith(".pdf") ? "application/pdf" : "image/*", name }); return; }
+    await privateFiles.download("compras", path, name);
+    } catch { toast.error("Não foi possível abrir o anexo."); }
   };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando contas a pagar…</p>;

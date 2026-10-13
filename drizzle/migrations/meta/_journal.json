@@ -36,6 +36,13 @@
       "when": 1791920443281,
       "tag": "0004_restrict_boletim_detail_reads_to_assigned_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791921371942,
+      "tag": "0005_restrict_direct_staff_cost_updates",
+      "breakpoints": true
     }
   ]
 }

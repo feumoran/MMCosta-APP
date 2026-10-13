@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { brl, dateBR, fileHash } from "@/lib/erp";
+import { usePrivateFiles } from "@/lib/private-files";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -145,6 +146,7 @@ const categoryFrom = (service: string): Category | null => {
 };
 
 export function MeasurementImport({ obraId, embedded = false }: { obraId: string; embedded?: boolean }) {
+  const privateFiles = usePrivateFiles();
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -585,15 +587,11 @@ export function MeasurementImport({ obraId, embedded = false }: { obraId: string
   };
 
   const download = async (storagePath: string, name: string) => {
-    const { data: signed, error: signedError } = await supabase.storage.from("importacoes").createSignedUrl(storagePath, 300);
-    if (signedError || !signed) {
+    try {
+      await privateFiles.download("importacoes", storagePath, name);
+    } catch {
       toast.error("Não foi possível baixar o arquivo original.");
-      return;
     }
-    const anchor = document.createElement("a");
-    anchor.href = signed.signedUrl;
-    anchor.download = name;
-    anchor.click();
   };
 
   const history = useMemo(() => data?.imports ?? [], [data]);
