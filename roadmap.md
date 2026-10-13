@@ -1,5 +1,9 @@
 # Roadmap — ERP MMcosta
 
+## Conferência do commit f5f91d0 e migrações — 13/10/2026
+- [ ] Confirmar versão main, conferir as seis migrações em ordem e aplicar somente as ausentes, sem outras exclusões
+- [ ] Regenerar tipos, recarregar cache e verificar/corrigir erros de TypeScript existentes
+
 ## Segurança das dependências — 13/10/2026
 - [x] Atualizar dependências vulneráveis e verificar todas as resoluções no lockfile textual (source-map-js 1.2.2, seroval 1.6.9, js-yaml 4.3.2 e xlsx oficial 0.20.3)
 - [x] Executar nova análise de dependências e confirmar compilação e leitura/exportação de planilhas (XLSX, XLS e CSV); distribuição oficial xlsx validada diretamente, pois o scanner não verifica tarballs
