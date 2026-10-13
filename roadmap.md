@@ -1,8 +1,8 @@
 # Roadmap — ERP MMcosta
 
 ## Conferência do commit f5f91d0 e migrações — 13/10/2026
-- [ ] Confirmar versão main, conferir as seis migrações em ordem e aplicar somente as ausentes, sem outras exclusões
-- [ ] Regenerar tipos, recarregar cache e verificar/corrigir erros de TypeScript existentes
+- [x] Confirmar main no commit f5f91d0; alterações 1–4 conferidas pelo histórico e hashes (férias preservadas por compatibilidade); limpeza 5 já executada e zero custos elegíveis; aplicar correção 6, ajustando o alvo para PM Osasco — Morro do Sabão. Somente o apelido incorreto de alojamento foi removido conforme arquivo 6; 28 custos, 16 funcionários e 2 alocações preservados
+- [x] Regenerar tipos, recarregar cache, corrigir erros de TypeScript existentes e confirmar build OK; três testes de data/valor passaram
 
 ## Segurança das dependências — 13/10/2026
 - [x] Atualizar dependências vulneráveis e verificar todas as resoluções no lockfile textual (source-map-js 1.2.2, seroval 1.6.9, js-yaml 4.3.2 e xlsx oficial 0.20.3)
