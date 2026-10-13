@@ -47,3 +47,9 @@
 - [x] Aplicar as migrações de permissões do RH, remoção do funcionário teste e exclusão de custos; manter a limpeza geral pendente
 - [x] Corrigir a Curva S para incluir marcos finais e concluir automaticamente obras com 100% de avanço
 - [x] Validar migrações financeiras, atualizar tipos e eliminar o travamento de Centros de custo
+
+## Integrações de agentes — 13/10/2026
+- [x] Ativar acesso OAuth e consentimento com retorno ao login
+- [x] Adicionar consultas MCP de obras e medições respeitando permissões
+- [x] Adicionar leitura e abertura de obras no navegador; extrair catálogo e validar bloqueio anônimo e retorno ao login
+- [ ] Confirmar consentimento completo e consultas com conta real — aguarda login do usuário no preview e republicação
