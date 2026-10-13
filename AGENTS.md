@@ -14,3 +14,8 @@
 - Employee vacation tracking uses ferias_limite; retain deprecated ferias_inicio and ferias_fim columns for backward compatibility and to avoid destructive schema changes.
 - Boletim detail SELECT policies must use the same assigned-role predicate as boletins and boletim_itens; unconditional authenticated reads expose details to accounts without an application role.
 - Install xlsx from the official SheetJS release tarball rather than the stale npm release, so spreadsheet imports use a security-patched implementation.
+
+- Selected private-file flows (documents, purchases, bulletins, receipts and imports) use authenticated Storage downloads and local blob previews, not signed bearer URLs, so each new fetch checks current access.
+- Measurement CSV exports neutralize formula-leading text while preserving numeric cells, so shared downloads cannot execute user-supplied formulas.
+- Measurement price queries use separate structured equality/null filters instead of interpolated OR syntax, so route input cannot change query meaning.
+- Daily staff-cost UPDATE is restricted to administration/office; engineering retains RH reads, allocation and server-derived generation, so arbitrary direct cost edits cannot alter reports.

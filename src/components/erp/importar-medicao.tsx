@@ -146,6 +146,7 @@ const categoryFrom = (service: string): Category | null => {
 };
 
 export function MeasurementImport({ obraId, embedded = false }: { obraId: string; embedded?: boolean }) {
+  const privateFiles = usePrivateFiles();
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
