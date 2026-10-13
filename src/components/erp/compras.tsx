@@ -72,7 +72,7 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível aprovar."),
   });
   const reject = useMutation({
-    mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => { const answer = await askFields({ title: "Rejeitar compra", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], fields: [{ name: "motivo", label: "Motivo da rejeição (opcional)" }], confirmLabel: "Rejeitar", destructive: true }); if (!answer) return false; const motivo = answer.motivo.trim() || undefined; const id = c.id; const { error } = await supabase.rpc("rejeitar_compra" as never, { _compra: id, _motivo: motivo } as never); if (error) throw error; return true; },
+    mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => { const answer = await askFields({ title: "Rejeitar compra", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], fields: [{ name: "motivo", label: "Motivo da rejeição (opcional)" }], confirmLabel: "Rejeitar", destructive: true }); if (!answer) return false; const motivo = (answer["motivo"] ?? "").trim() || undefined; const id = c.id; const { error } = await supabase.rpc("rejeitar_compra" as never, { _compra: id, _motivo: motivo } as never); if (error) throw error; return true; },
     onSuccess: (done) => { if (!done) return; toast.success("Compra rejeitada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível rejeitar."),
   });
@@ -80,8 +80,8 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
     mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => {
       const answer = await askFields({ title: "Marcar como paga", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor da conta", value: brl.format(c.valor) }], fields: [{ name: "data", label: "Data do pagamento", type: "date", defaultValue: today().split("-").reverse().join("-"), required: true }, { name: "valor", label: "Valor pago (R$)", type: "money", defaultValue: String(c.valor).replace(".", ","), required: true }], confirmLabel: "Confirmar pagamento" });
       if (!answer) return false;
-      const dataPagamento = parseDateInput(answer.data);
-      const valor = parseMoneyInput(answer.valor);
+      const dataPagamento = parseDateInput(answer["data"] ?? "");
+      const valor = parseMoneyInput(answer["valor"] ?? "");
       if (!dataPagamento) throw new Error("Data inválida. Use dd-mm-aaaa.");
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Valor inválido.");
       const { error } = await supabase.rpc("marcar_compra_paga" as never, { _compra: c.id, _data: dataPagamento, _valor: valor } as never);
