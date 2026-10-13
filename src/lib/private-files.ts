@@ -6,7 +6,7 @@ export type PrivateBucket = "documentos" | "compras" | "boletins" | "comprovante
 // Authenticated Storage GET rechecks current RLS on every fetch. Never issue
 // transferable signed URLs; a blob URL only refers to bytes already downloaded.
 export async function fetchPrivateFile(bucket: PrivateBucket, path: string): Promise<Blob> {
-  const { data, error } = await supabase.storage.from(bucket).download(path);
+  const { data, error } = await supabase.storage.from(bucket).download(path, {}, { cache: "no-store" });
   if (error || !data) throw new Error("Não foi possível abrir o arquivo. Verifique seu acesso e tente novamente.");
   return data;
 }
