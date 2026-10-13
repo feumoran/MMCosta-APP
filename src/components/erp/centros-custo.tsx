@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Landmark, Search, Users } from "lucide-react";
+import { Building2, Landmark, Pencil, Search, Users } from "lucide-react";
+import { EditEntryDialog, type EditableEntry } from "@/components/erp/editar-lancamento";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, dateBR } from "@/lib/erp";
@@ -46,6 +47,7 @@ function TeamCosts({ costs, employees, total }: { costs: TeamCost[]; employees: 
 export function CostCenters({ initialCenter }: { initialCenter?: string }) {
   const [selectedId, setSelectedId] = useState(initialCenter ?? "");
   const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState<EditableEntry | null>(null);
   const [filter, setFilter] = useState<CenterFilter>("todos");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -110,7 +112,7 @@ export function CostCenters({ initialCenter }: { initialCenter?: string }) {
   if (query.error) return <p className="text-sm text-destructive">Não foi possível carregar os centros de custo.</p>;
 
   return <div className="space-y-6">
-    <header className="border-b pb-6"><p className="text-xs font-bold uppercase text-primary">Financeiro</p><h1 className="font-display text-3xl font-bold">Centros de custo</h1><p className="mt-1 text-sm text-muted-foreground">Consulte obras, áreas administrativas e todas as movimentações registradas.</p></header>
+    <header className="border-b pb-6"><p className="text-xs font-bold uppercase text-primary">Financeiro</p><h1 className="font-display text-3xl font-bold">Centros de custo</h1><p className="mt-1 text-sm text-muted-foreground">Consulte obras, áreas administrativas e todas as movimentações registradas. Os totais somam lançamentos não excluídos e o custo da equipe alocada — a mesma regra do Extrato; contas a pagar só entram depois de pagas.</p></header>
     <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="min-w-0 border-r-0 lg:border-r lg:pr-6">
         <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar centro de custo" className="pl-9"/></div>
@@ -122,7 +124,8 @@ export function CostCenters({ initialCenter }: { initialCenter?: string }) {
         <div className="mt-5 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4">{[["Recebimentos", received], ["Pagamentos", paid], ["Equipe", teamPaid], ["Saldo", received - paid]].map(([label, value]) => <div key={String(label)} className="bg-card p-4"><p className="text-[11px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-2 font-mono text-xl font-semibold">{brl.format(Number(value))}</p></div>)}</div>
         <TeamCosts costs={employeeCosts} employees={query.data?.employees ?? []} total={teamPaid}/>
         <div className="mt-7 flex items-end justify-between border-b pb-3"><div><h3 className="font-display text-lg font-bold">Movimentações</h3><p className="text-xs text-muted-foreground">Mais recentes primeiro</p></div><span className="text-xs text-muted-foreground">{entries.length} registros</span></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Obra</th><th className="pr-3 text-right">Valor</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id} className="border-b"><td className="p-3 font-mono text-xs">{dateBR(entry.data)}</td><td><span className={`rounded-sm px-2 py-1 text-[10px] font-bold uppercase ${entry.tipo === "recebimento" ? "bg-good/10 text-good" : "bg-destructive/10 text-destructive"}`}>{entry.tipo}</span></td><td>{categories.find((category) => category.id === entry.categoria)?.nome ?? entry.categoria}</td><td className="max-w-xs truncate">{entry.descricao}</td><td>{entry.obras?.nome ?? "—"}</td><td className="pr-3 text-right font-mono font-semibold">{brl.format(Number(entry.valor))}</td></tr>)}</tbody></table>{entries.length === 0 && <p className="border-b py-14 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada neste centro de custo.</p>}</div></> : <div className="border-y py-16 text-center text-sm text-muted-foreground">Selecione um centro de custo.</div>}</section>
+        <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Obra</th><th className="text-right">Valor</th><th className="pr-3"></th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id} className="border-b"><td className="p-3 font-mono text-xs">{dateBR(entry.data)}</td><td><span className={`rounded-sm px-2 py-1 text-[10px] font-bold uppercase ${entry.tipo === "recebimento" ? "bg-good/10 text-good" : "bg-destructive/10 text-destructive"}`}>{entry.tipo}</span></td><td>{categories.find((category) => category.id === entry.categoria)?.nome ?? entry.categoria}</td><td className="max-w-xs truncate">{entry.descricao}</td><td>{entry.obras?.nome ?? "—"}</td><td className="pr-3 text-right font-mono font-semibold">{brl.format(Number(entry.valor))}</td><td className="pr-3 text-right"><Button size="icon" variant="ghost" aria-label="Corrigir categoria e centro" onClick={() => setEditing({ id: entry.id, data: entry.data, descricao: entry.descricao, valor: Number(entry.valor), centro_custo_id: entry.centro_custo_id, categoria: entry.categoria })}><Pencil /></Button></td></tr>)}</tbody></table>{entries.length === 0 && <p className="border-b py-14 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada neste centro de custo.</p>}</div></> : <div className="border-y py-16 text-center text-sm text-muted-foreground">Selecione um centro de custo.</div>}</section>
+      <EditEntryDialog entry={editing} centers={(query.data?.centers ?? []).map((c) => ({ id: c.id, nome: c.nome, tipo: c.tipo, obra_id: c.obra_id }))} categories={categories} onClose={() => setEditing(null)} />
     </div>
   </div>;
 }
