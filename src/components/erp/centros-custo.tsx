@@ -8,6 +8,41 @@ import { Input } from "@/components/ui/input";
 
 type CenterFilter = "todos" | "obra" | "administrativo";
 
+
+type TeamCost = { id: string; funcionario_id: string; data: string; valor_diaria: number | string };
+
+function TeamCosts({ costs, employees, total }: { costs: TeamCost[]; employees: { id: string; nome: string }[]; total: number }) {
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const toggle = (key: string) => setOpen((current) => ({ ...current, [key]: !current[key] }));
+  const months = useMemo(() => {
+    const byMonth = new Map<string, Map<string, TeamCost[]>>();
+    for (const cost of costs) {
+      const month = cost.data.slice(0, 7);
+      const people = byMonth.get(month) ?? new Map<string, TeamCost[]>();
+      people.set(cost.funcionario_id, [...(people.get(cost.funcionario_id) ?? []), cost]);
+      byMonth.set(month, people);
+    }
+    const nameOf = (id: string) => employees.find((employee) => employee.id === id)?.nome ?? "Funcionário";
+    return [...byMonth.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([month, people]) => {
+      const list = [...people.entries()].map(([id, days]) => ({ id, nome: nameOf(id), days: [...days].sort((a, b) => a.data.localeCompare(b.data)), total: days.reduce((sum, day) => sum + Number(day.valor_diaria), 0) })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      return { month, list, total: list.reduce((sum, person) => sum + person.total, 0) };
+    });
+  }, [costs, employees]);
+  const monthLabel = (month: string) => new Date(`${month}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return <>
+    <button type="button" onClick={() => toggle("team")} className="mt-7 flex w-full items-end justify-between border-b pb-3 text-left"><div><h3 className="flex items-center gap-2 font-display text-lg font-bold"><Users className="size-4"/>Total equipe</h3><p className="text-xs text-muted-foreground">Acumulado por funcionário no mês · clique para abrir</p></div><span className="font-mono text-sm font-semibold">{brl.format(total)}</span></button>
+    {open.team && <div>
+      {months.length === 0 && <p className="border-b py-8 text-center text-sm text-muted-foreground">Nenhum custo de equipe neste período.</p>}
+      {months.map(({ month, list, total: monthTotal }) => <div key={month}>
+        <div className="flex items-center justify-between bg-muted/50 px-3 py-2 text-[11px] font-semibold uppercase text-muted-foreground"><span>{monthLabel(month)}</span><span className="font-mono">{brl.format(monthTotal)}</span></div>
+        {list.map((person) => { const key = `${month}-${person.id}`; return <div key={key} className="border-b">
+          <button type="button" onClick={() => toggle(key)} className="flex w-full items-center justify-between px-3 py-3 text-left text-sm hover:bg-muted/30"><span className="font-medium">{person.nome}<span className="ml-2 text-xs font-normal text-muted-foreground">{person.days.length} {person.days.length === 1 ? "diária" : "diárias"}</span></span><span className="font-mono font-semibold">{brl.format(person.total)}</span></button>
+          {open[key] && <table className="mb-2 w-full text-left text-sm"><tbody>{person.days.map((day) => <tr key={day.id} className="border-t border-dashed"><td className="py-2 pl-8 font-mono text-xs">{dateBR(day.data)}</td><td className="pr-3 text-right font-mono">{brl.format(Number(day.valor_diaria))}</td></tr>)}</tbody></table>}
+        </div>; })}
+      </div>)}
+    </div>}
+  </>;
+}
 export function CostCenters({ initialCenter }: { initialCenter?: string }) {
   const [selectedId, setSelectedId] = useState(initialCenter ?? "");
   const [search, setSearch] = useState("");
@@ -85,8 +120,7 @@ export function CostCenters({ initialCenter }: { initialCenter?: string }) {
       </aside>
       <section className="min-w-0">{selected ? <><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase text-primary">{selected.tipo === "obra" ? "Centro da obra" : "Centro administrativo"}</p><h2 className="font-display text-2xl font-bold">{selected.nome}</h2>{selected.obras?.nome && <p className="mt-1 text-sm text-muted-foreground">{selected.obras.nome}</p>}</div>{!selected.ativo && <span className="rounded-sm bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">Inativo</span>}</div>
         <div className="mt-5 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4">{[["Recebimentos", received], ["Pagamentos", paid], ["Equipe", teamPaid], ["Saldo", received - paid]].map(([label, value]) => <div key={String(label)} className="bg-card p-4"><p className="text-[11px] font-semibold uppercase text-muted-foreground">{label}</p><p className="mt-2 font-mono text-xl font-semibold">{brl.format(Number(value))}</p></div>)}</div>
-        <div className="mt-7 flex items-end justify-between border-b pb-3"><div><h3 className="flex items-center gap-2 font-display text-lg font-bold"><Users className="size-4"/>Equipe</h3><p className="text-xs text-muted-foreground">Custos diários automáticos no período</p></div><span className="font-mono text-sm font-semibold">{brl.format(teamPaid)}</span></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Data</th><th>Funcionário</th><th className="pr-3 text-right">Diária</th></tr></thead><tbody>{employeeCosts.map((cost)=><tr key={cost.id} className="border-b"><td className="p-3 font-mono text-xs">{dateBR(cost.data)}</td><td>{query.data?.employees.find((employee)=>employee.id===cost.funcionario_id)?.nome??"Funcionário"}</td><td className="pr-3 text-right font-mono font-semibold">{brl.format(Number(cost.valor_diaria))}</td></tr>)}</tbody></table>{employeeCosts.length===0&&<p className="border-b py-8 text-center text-sm text-muted-foreground">Nenhum custo de equipe neste período.</p>}</div>
+        <TeamCosts costs={employeeCosts} employees={query.data?.employees ?? []} total={teamPaid}/>
         <div className="mt-7 flex items-end justify-between border-b pb-3"><div><h3 className="font-display text-lg font-bold">Movimentações</h3><p className="text-xs text-muted-foreground">Mais recentes primeiro</p></div><span className="text-xs text-muted-foreground">{entries.length} registros</span></div>
         <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-muted/50 text-[11px] uppercase text-muted-foreground"><tr><th className="p-3">Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Obra</th><th className="pr-3 text-right">Valor</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id} className="border-b"><td className="p-3 font-mono text-xs">{dateBR(entry.data)}</td><td><span className={`rounded-sm px-2 py-1 text-[10px] font-bold uppercase ${entry.tipo === "recebimento" ? "bg-good/10 text-good" : "bg-destructive/10 text-destructive"}`}>{entry.tipo}</span></td><td>{categories.find((category) => category.id === entry.categoria)?.nome ?? entry.categoria}</td><td className="max-w-xs truncate">{entry.descricao}</td><td>{entry.obras?.nome ?? "—"}</td><td className="pr-3 text-right font-mono font-semibold">{brl.format(Number(entry.valor))}</td></tr>)}</tbody></table>{entries.length === 0 && <p className="border-b py-14 text-center text-sm text-muted-foreground">Nenhuma movimentação registrada neste centro de custo.</p>}</div></> : <div className="border-y py-16 text-center text-sm text-muted-foreground">Selecione um centro de custo.</div>}</section>
     </div>
