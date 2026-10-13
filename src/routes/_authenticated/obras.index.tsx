@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Building2, CalendarDays, CirclePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 import { dateBR } from "@/lib/erp";
 
 export const Route = createFileRoute("/_authenticated/obras/")({
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/obras/")({
 });
 
 function WorksPage() {
+  const navigate = useNavigate();
   const { data = [], isLoading, error } = useQuery({
     queryKey: ["works-page"],
     queryFn: async () => {
@@ -31,6 +34,31 @@ function WorksPage() {
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  useWebMCP({
+    name: "ler_obras_visiveis",
+    description: "Lista as obras exibidas nesta página com identificação, status e datas.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("ler_obras_visiveis", () => {
+      if (isLoading) return "Carregando obras…";
+      if (error) throw new Error("Não foi possível carregar as obras.");
+      return data.length ? data.map(work => `${work.id}: ${work.nome}; ${work.status}; ${dateBR(work.data_inicio)} — ${dateBR(work.data_fim_prevista)}`).join("\n") : "Nenhuma obra ativa.";
+    }),
+  });
+  useWebMCP({
+    name: "abrir_obra_visivel",
+    description: "Abre o painel de uma das obras exibidas nesta página.",
+    enabled: !isLoading && !error,
+    inputSchema: { type: "object", properties: { obra_id: { type: "string", description: "Identificador de uma obra retornada por ler_obras_visiveis." } }, required: ["obra_id"], additionalProperties: false },
+    execute: ({ obra_id }: { obra_id: string }) => runWebMCPTool("abrir_obra_visivel", async () => {
+      if (isLoading || error) throw new Error("As obras ainda não estão disponíveis.");
+      if (typeof obra_id !== "string") throw new Error("Identificador inválido.");
+      const work = data.find(row => row.id === obra_id);
+      if (!work) throw new Error("Obra não disponível nesta página.");
+      await navigate({ to: "/obras/$id/painel", params: { id: work.id } });
+      return "Painel da obra aberto.";
+    }),
   });
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando obras…</p>;

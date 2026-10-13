@@ -19,3 +19,7 @@
 - Measurement CSV exports neutralize formula-leading text while preserving numeric cells, so shared downloads cannot execute user-supplied formulas.
 - Measurement price queries use separate structured equality/null filters instead of interpolated OR syntax, so route input cannot change query meaning.
 - Daily staff-cost UPDATE is restricted to administration/office; engineering retains RH reads, allocation and server-derived generation, so arbitrary direct cost edits cannot alter reports.
+
+- MCP server tools live in src/lib/mcp with one defineTool per file and the TanStack SDK-generated /mcp endpoint; OAuth caller tokens and existing role checks/RLS enforce read-only access without financial values or attachments.
+- OAuth consent preserves a canonical same-origin return path across sign-in and signup so authorization cannot be lost or redirected externally.
+- Browser-local WebMCP registrations live in their visible owning page and use shared static-name telemetry; they never bypass visible collections or permissions.
