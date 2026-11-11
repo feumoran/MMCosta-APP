@@ -115,7 +115,7 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
 
   return <div className="space-y-8">
     {canCreate && formOnly && <section className="border-t-2 border-primary bg-card p-5 ring-1 ring-border">
-      <h2 className="font-display text-xl font-bold">Nova compra</h2>
+      <h2 className="font-display text-xl font-bold">Nova compra / Pagamentos</h2>
       <form onSubmit={e => { e.preventDefault(); create.mutate(); }} className="mt-4 grid gap-3 rounded-lg bg-muted p-4 md:grid-cols-2 xl:grid-cols-6">
         <Input placeholder="Fornecedor" value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} required />
         <Input placeholder="Descrição" value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} />
