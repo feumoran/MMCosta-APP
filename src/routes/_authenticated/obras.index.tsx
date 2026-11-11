@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Building2, CalendarDays, CirclePlus } from "lucide-react";
+import { Archive, ArrowRight, Building2, CalendarDays, CirclePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useWebMCP } from "use-webmcp-tool";
@@ -61,6 +61,8 @@ function WorksPage() {
     }),
   });
 
+  const active = data.filter(work => work.status !== "concluida");
+  const done = data.filter(work => work.status === "concluida");
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando obras…</p>;
   if (error) return <p className="text-sm text-destructive">Não foi possível carregar as obras.</p>;
 
@@ -70,14 +72,23 @@ function WorksPage() {
       <Button asChild variant="outline"><Link to="/cadastros"><CirclePlus /> Nova obra</Link></Button>
     </header>
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {data.map((work) => <Link key={work.id} to="/obras/$id/painel" params={{ id: work.id }} className="group border-t-4 border-primary bg-card p-5 shadow-sm ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md">
-        <div className="flex items-start justify-between gap-4"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Building2 className="size-5" /></div><span className="rounded-sm bg-muted px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground">{work.status.replaceAll("_", " ")}</span></div>
-        <h2 className="mt-5 font-display text-xl font-bold">{work.nome}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{work.clientes?.nome}</p>
-        <div className="mt-5 flex items-center gap-2 border-t pt-4 text-xs text-muted-foreground"><CalendarDays className="size-4" /><span className="font-mono">{dateBR(work.data_inicio)} — {dateBR(work.data_fim_prevista)}</span></div>
-        <div className="mt-4 flex items-center justify-end text-xs font-bold text-primary">Abrir obra <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" /></div>
-      </Link>)}
-      {data.length === 0 && <div className="col-span-full border-y py-16 text-center text-sm text-muted-foreground">Nenhuma obra ativa.</div>}
+      {active.map(work => <WorkCard key={work.id} work={work} />)}
+      {active.length === 0 && <div className="col-span-full border-y py-16 text-center text-sm text-muted-foreground">Nenhuma obra ativa.</div>}
     </section>
+    {done.length > 0 && <section className="space-y-4 border-t pt-6">
+      <div className="flex items-center gap-2"><Archive className="size-5 text-muted-foreground" /><h2 className="font-display text-xl font-bold">Obras concluídas</h2><span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">{done.length}</span></div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{done.map(work => <WorkCard key={work.id} work={work} archived />)}</div>
+    </section>}
   </div>;
+}
+
+type WorkRow = { id: string; nome: string; status: string; data_inicio: string; data_fim_prevista: string; clientes: { nome: string } | null };
+function WorkCard({ work, archived }: { work: WorkRow; archived?: boolean }) {
+  return <Link to="/obras/$id/painel" params={{ id: work.id }} className={`group border-t-4 bg-card p-5 shadow-sm ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-md ${archived ? "border-muted-foreground/40 opacity-80" : "border-primary"}`}>
+    <div className="flex items-start justify-between gap-4"><div className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Building2 className="size-5" /></div><span className="rounded-sm bg-muted px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground">{work.status.replaceAll("_", " ")}</span></div>
+    <h2 className="mt-5 font-display text-xl font-bold">{work.nome}</h2>
+    <p className="mt-1 text-sm text-muted-foreground">{work.clientes?.nome}</p>
+    <div className="mt-5 flex items-center gap-2 border-t pt-4 text-xs text-muted-foreground"><CalendarDays className="size-4" /><span className="font-mono">{dateBR(work.data_inicio)} — {dateBR(work.data_fim_prevista)}</span></div>
+    <div className="mt-4 flex items-center justify-end text-xs font-bold text-primary">Abrir obra <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" /></div>
+  </Link>;
 }
