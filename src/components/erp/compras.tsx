@@ -135,6 +135,15 @@ export function Purchases({ formOnly = false }: { formOnly?: boolean }) {
       </form>
     </section>}
 
+    {formOnly && <section>
+      <h2 className="font-display text-xl font-bold">Compras registradas</h2>
+      <p className="text-xs text-muted-foreground">Últimas compras e pagamentos lançados, com a situação atual.</p>
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[640px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Vencimento</th><th className="px-3">Fornecedor / descrição</th><th className="px-3">Status</th><th className="px-3 text-right">Valor</th></tr></thead><tbody>
+        {[...data.compras].sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))).slice(0, 20).map(c => <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}</span></td><td className="px-3"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase">{String(c.status).replaceAll("_", " ")}</span></td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td></tr>)}
+        {data.compras.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Nenhuma compra registrada.</td></tr>}
+      </tbody></table></div>
+    </section>}
+
     {!formOnly && (() => { const reembolsar = data.compras.filter(c => c.origem === "comprovante" && (c.status === "pendente" || c.status === "aprovada")).reduce((s, c) => s + c.valor, 0); return reembolsar > 0 && <section className="border-t-2 border-warning bg-warning/5 p-5"><p className="text-xs font-bold uppercase text-warning">Reembolso a funcionários</p><p className="mt-1 text-sm text-muted-foreground">Soma dos caixas (comprovantes) já distribuídos e ainda não pagos ao funcionário.</p><p className="mt-2 font-mono text-2xl font-bold">{brl.format(reembolsar)}</p></section>; })()}
 
     {!formOnly && <section>
