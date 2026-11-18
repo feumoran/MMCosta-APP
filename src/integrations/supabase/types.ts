@@ -885,8 +885,7 @@ export type Database = {
           arquivo_nome: string
           arquivo_path: string
           arquivo_tipo: string
-          categoria: Database["public"]["Enums"]["documento_categoria"] | null
-          pasta: string
+          categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at: string
           created_by: string | null
           hash_arquivo: string | null
@@ -899,8 +898,7 @@ export type Database = {
           arquivo_nome: string
           arquivo_path: string
           arquivo_tipo: string
-          categoria?: Database["public"]["Enums"]["documento_categoria"] | null
-          pasta?: string
+          categoria: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
           hash_arquivo?: string | null
@@ -913,8 +911,7 @@ export type Database = {
           arquivo_nome?: string
           arquivo_path?: string
           arquivo_tipo?: string
-          categoria?: Database["public"]["Enums"]["documento_categoria"] | null
-          pasta?: string
+          categoria?: Database["public"]["Enums"]["documento_categoria"]
           created_at?: string
           created_by?: string | null
           hash_arquivo?: string | null
