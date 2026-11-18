@@ -65,18 +65,18 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, tipo_pagamento: form.tipo_pagamento.trim(), anexo_path: anexoPath, ...(nfs.length ? {} : { justificativa: form.justificativa.trim() }), ...(paths.length > 1 ? { anexos_extras: paths.slice(1) } : {}), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
       if (ie) { if (paths.length) await supabase.storage.from("compras").remove(paths); throw ie; }
     },
-    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNfs([]); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNfs([]); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); },
     onError: e => toast.error((e as { message?: string })?.message ?? "Não foi possível registrar a compra."),
   });
 
   const approve = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.rpc("aprovar_compra" as never, { _compra: id } as never); if (error) throw error; },
-    onSuccess: () => { toast.success("Compra aprovada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra aprovada."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível aprovar."),
   });
   const reject = useMutation({
     mutationFn: async (c: { id: string; fornecedor: string; valor: number }) => { const answer = await askFields({ title: "Rejeitar compra", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], fields: [{ name: "motivo", label: "Motivo da rejeição (opcional)" }], confirmLabel: "Rejeitar", destructive: true }); if (!answer) return false; const motivo = (answer["motivo"] ?? "").trim() || undefined; const id = c.id; const { error } = await supabase.rpc("rejeitar_compra" as never, { _compra: id, _motivo: motivo } as never); if (error) throw error; return true; },
-    onSuccess: (done) => { if (!done) return; toast.success("Compra rejeitada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: (done) => { if (!done) return; toast.success("Compra rejeitada."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível rejeitar."),
   });
   const markPaid = useMutation({
@@ -91,12 +91,12 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       if (error) throw error;
       return true;
     },
-    onSuccess: (done) => { if (!done) return; toast.success("Compra paga. Lançamento criado no fluxo de caixa."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["cost-centers-details"] }); qc.invalidateQueries({ queryKey: ["extrato"] }); },
+    onSuccess: (done) => { if (!done) return; toast.success("Compra paga. Lançamento criado no fluxo de caixa."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); qc.invalidateQueries({ queryKey: ["cost-centers-details"] }); qc.invalidateQueries({ queryKey: ["extrato"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível marcar como paga."),
   });
   const cancel = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("compras").update({ status: "cancelada" } as never).eq("id", id); if (error) throw error; },
-    onSuccess: () => { toast.success("Compra cancelada."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra cancelada."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível cancelar."),
   });
 
@@ -106,7 +106,7 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       if (error) throw error;
       const files = [c.anexo_path, ...(c.anexos_extras ?? [])].filter(Boolean) as string[]; if (files.length) await supabase.storage.from("compras").remove(files);
     },
-    onSuccess: () => { toast.success("Compra excluída."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra excluída."); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["receipts"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível excluir."),
   });
   const openNf = async (path: string, name: string, download = false) => {
