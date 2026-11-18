@@ -24,7 +24,7 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
   const privateFiles = usePrivateFiles();
   const qc = useQueryClient();
   const [form, setForm] = useState(emptyForm);
-  const [nf, setNf] = useState<File | null>(null);
+  const [nfs, setNfs] = useState<File[]>([]);
   const nfInput = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState("abertas");  const [preview, setPreview] = useState<{ url: string; type: string; name: string } | null>(null);
 
@@ -53,18 +53,20 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Informe um valor válido.");
       if (!form.tipo_pagamento) throw new Error("Informe o tipo de pagamento.");
       if (!form.vencimento) throw new Error("Informe a data de vencimento.");
-      if (!nf && !form.justificativa.trim()) throw new Error("Anexe a NF ou o cupom fiscal. Se não houver, escreva a justificativa.");
+      if (!nfs.length && !form.justificativa.trim()) throw new Error("Anexe a NF ou o cupom fiscal. Se não houver, escreva a justificativa.");
       const center = data.centers.find(c => c.id === form.centro_custo_id);
-      let anexoPath: string | null = null;
-      if (nf) {
-        anexoPath = `${data.user?.id ?? "compras"}/${crypto.randomUUID()}-${nf.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
-        const { error: ue } = await supabase.storage.from("compras").upload(anexoPath, nf, { contentType: nf.type || "application/octet-stream" });
-        if (ue) throw ue;
+      const paths: string[] = [];
+      for (const file of nfs) {
+        const p = `${data.user?.id ?? "compras"}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+        const { error: ue } = await supabase.storage.from("compras").upload(p, file, { contentType: file.type || "application/octet-stream" });
+        if (ue) { if (paths.length) await supabase.storage.from("compras").remove(paths); throw ue; }
+        paths.push(p);
       }
-      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, tipo_pagamento: form.tipo_pagamento, anexo_path: anexoPath, ...(nf ? {} : { justificativa: form.justificativa.trim() }), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
-      if (ie) { if (anexoPath) await supabase.storage.from("compras").remove([anexoPath]); throw ie; }
+      const anexoPath: string | null = paths[0] ?? null;
+      const { error: ie } = await supabase.from("compras").insert({ fornecedor: form.fornecedor.trim(), descricao: form.descricao.trim() || form.fornecedor.trim(), categoria: form.categoria, valor, vencimento: form.vencimento, centro_custo_id: form.centro_custo_id, obra_id: center?.obra_id ?? null, numero_documento: form.numero_documento.trim() || null, tipo_pagamento: form.tipo_pagamento, anexo_path: anexoPath, ...(nfs.length ? {} : { justificativa: form.justificativa.trim() }), ...(paths.length > 1 ? { anexos_extras: paths.slice(1) } : {}), status: "pendente", origem: "manual", created_by: data.user?.id ?? null } as never);
+      if (ie) { if (paths.length) await supabase.storage.from("compras").remove(paths); throw ie; }
     },
-    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNf(null); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onSuccess: () => { toast.success("Compra registrada como pendente."); setForm(emptyForm); setNfs([]); qc.invalidateQueries({ queryKey: ["compras"] }); },
     onError: e => toast.error((e as { message?: string })?.message ?? "Não foi possível registrar a compra."),
   });
 
@@ -100,10 +102,10 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
   });
 
   const removeOwn = useMutation({
-    mutationFn: async (c: { id: string; anexo_path?: string | null }) => {
+    mutationFn: async (c: { id: string; anexo_path?: string | null; anexos_extras?: string[] | null }) => {
       const { error } = await supabase.from("compras").delete().eq("id", c.id).eq("status", "pendente");
       if (error) throw error;
-      if (c.anexo_path) await supabase.storage.from("compras").remove([c.anexo_path]);
+      const files = [c.anexo_path, ...(c.anexos_extras ?? [])].filter(Boolean) as string[]; if (files.length) await supabase.storage.from("compras").remove(files);
     },
     onSuccess: () => { toast.success("Compra excluída."); qc.invalidateQueries({ queryKey: ["compras"] }); },
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível excluir."),
@@ -122,6 +124,7 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
     .filter(c => statusFilter === "todas" ? true : statusFilter === "abertas" ? (c.status === "pendente" || c.status === "aprovada") : c.status === statusFilter)
     .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)));
   const centerOf = (c: { centro_custo_id: string; obra_id: string | null }) => { const center = data.centers.find(x => x.id === c.centro_custo_id); const work = data.works.find(w => w.id === (c.obra_id ?? center?.obra_id)); return center ? <><span className="block font-medium">{center.nome}</span>{work && work.nome !== center.nome && <span className="block text-muted-foreground">Obra: {work.nome}</span>}</> : "—"; };
+  const filesOf = (c: { anexo_path?: string | null; anexos_extras?: string[] | null }) => [c.anexo_path, ...(c.anexos_extras ?? [])].filter(Boolean) as string[];
   const fileName = (path: string) => path.split("/").pop()?.replace(/^[0-9a-f-]{36}-/, "") ?? "anexo";
 
   return <div className="space-y-8">
@@ -137,12 +140,12 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
         <label className="space-y-1 text-xs text-muted-foreground">Data de vencimento<Input type="date" className="font-mono" value={form.vencimento} onChange={e => setForm({ ...form, vencimento: e.target.value })} required /></label>
         <Input placeholder="Nº da NF / cupom" value={form.numero_documento} onChange={e => setForm({ ...form, numero_documento: e.target.value })} />
         <div className="flex items-center gap-2 md:col-span-2 xl:col-span-2">
-          <input ref={nfInput} type="file" accept=".pdf,image/*" className="hidden" onChange={e => { setNf(e.target.files?.[0] ?? null); e.target.value = ""; }} />
-          <Button type="button" variant="outline" onClick={() => nfInput.current?.click()}><Paperclip />{nf ? "Trocar anexo" : "Anexar NF ou cupom fiscal"}</Button>
-          {nf && <span className="truncate text-xs">{nf.name}</span>}
-          {nf && <Button type="button" variant="ghost" size="sm" onClick={() => setNf(null)}>Remover</Button>}
+        <div className="flex flex-wrap items-center gap-2 md:col-span-2 xl:col-span-2">
+          <input ref={nfInput} type="file" multiple accept=".pdf,image/*" className="hidden" onChange={e => { const picked = Array.from(e.target.files ?? []); setNfs(prev => [...prev, ...picked]); e.target.value = ""; }} />
+          <Button type="button" variant="outline" onClick={() => nfInput.current?.click()}><Paperclip />{nfs.length ? "Adicionar outro anexo" : "Anexar NF ou cupom fiscal"}</Button>
+          {nfs.map((file, i) => <span key={`${file.name}-${i}`} className="flex max-w-full items-center gap-1 rounded-full bg-card px-2 py-1 text-xs"><span className="truncate">{file.name}</span><button type="button" className="font-bold text-destructive" aria-label={`Remover ${file.name}`} onClick={() => setNfs(prev => prev.filter((_, j) => j !== i))}>×</button></span>)}
         </div>
-        {!nf && <Textarea className="md:col-span-2 xl:col-span-3" placeholder="Sem NF ou cupom? Escreva a justificativa (obrigatória)" value={form.justificativa} onChange={e => setForm({ ...form, justificativa: e.target.value })} />}
+        {!nfs.length && <Textarea className="md:col-span-2 xl:col-span-3" placeholder="Sem NF ou cupom? Escreva a justificativa (obrigatória)" value={form.justificativa} onChange={e => setForm({ ...form, justificativa: e.target.value })} />}
         <Button disabled={create.isPending} className="xl:col-span-6"><Plus />{create.isPending ? "Registrando…" : "Registrar compra pendente"}</Button>
       </form>
     </section>}
@@ -151,7 +154,7 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       <h2 className="font-display text-xl font-bold">Pagamentos pendentes</h2>
       <p className="text-xs text-muted-foreground">Compras, pagamentos e reembolsos de caixa pendentes ou aprovados, aguardando pagamento.</p>
       <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[900px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Vencimento</th><th className="px-3">Fornecedor / descrição</th><th className="px-3">Tipo de pagamento</th><th className="px-3">NF / comprovante</th><th className="px-3">Status</th><th className="px-3 text-right">Valor</th><th className="w-12 px-3"></th></tr></thead><tbody>
-        {pending.map(c => { const mine = isAdmin || c.created_by === data.user?.id; const canDelete = c.origem !== "comprovante" && c.status === "pendente" && mine && (canCreate); return <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}</span></td><td className="px-3 text-xs">{c.origem === "comprovante" ? "Reembolso de caixa" : c.tipo_pagamento ?? "—"}</td><td className="px-3 text-xs"><span className="flex items-center gap-1">{c.numero_documento ? <span className="font-mono">{c.numero_documento}</span> : !c.anexo_path && <span className="text-muted-foreground">{c.justificativa ? "Sem NF (justificado)" : "—"}</span>}{c.anexo_path && <Button size="icon" variant="ghost" className="size-7" aria-label="Ver NF ou comprovante" onClick={() => void openNf(c.anexo_path, fileName(c.anexo_path))}><Eye className="size-4" /></Button>}</span></td><td className="px-3"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase">{String(c.status).replaceAll("_", " ")}</span></td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td><td className="px-3 text-right">{canDelete && <Button size="icon" variant="ghost" aria-label="Excluir compra" onClick={() => void askConfirm({ title: "Excluir compra", description: "A compra e o anexo serão removidos. Depois você pode lançar novamente com os dados corretos.", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], confirmLabel: "Excluir", destructive: true }).then(ok => ok && removeOwn.mutate(c))}><Trash2 /></Button>}</td></tr>; })}
+        {pending.map(c => { const mine = isAdmin || c.created_by === data.user?.id; const canDelete = c.origem !== "comprovante" && c.status === "pendente" && mine && (canCreate); return <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}</span></td><td className="px-3 text-xs">{c.origem === "comprovante" ? "Reembolso de caixa" : c.tipo_pagamento ?? "—"}</td><td className="px-3 text-xs"><span className="flex items-center gap-1">{c.numero_documento ? <span className="font-mono">{c.numero_documento}</span> : !filesOf(c).length && <span className="text-muted-foreground">{c.justificativa ? "Sem NF (justificado)" : "—"}</span>}{filesOf(c).map((p, i) => <Button key={p} size="icon" variant="ghost" className="size-7" aria-label={`Ver anexo ${i + 1}`} title={`Anexo ${i + 1}`} onClick={() => void openNf(p, fileName(p))}><Eye className="size-4" /></Button>)}</span></td><td className="px-3"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase">{String(c.status).replaceAll("_", " ")}</span></td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td><td className="px-3 text-right">{canDelete && <Button size="icon" variant="ghost" aria-label="Excluir compra" onClick={() => void askConfirm({ title: "Excluir compra", description: "A compra e o anexo serão removidos. Depois você pode lançar novamente com os dados corretos.", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], confirmLabel: "Excluir", destructive: true }).then(ok => ok && removeOwn.mutate(c))}><Trash2 /></Button>}</td></tr>; })}
         {pending.length === 0 && <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Nenhum pagamento pendente.</td></tr>}
       </tbody></table></div>
     </section>; })()}
@@ -161,7 +164,7 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
     {!formOnly && !listOnly && <section>
       <div className="flex items-center justify-between"><div><h2 className="font-display text-xl font-bold">Contas a pagar</h2><p className="text-xs text-muted-foreground">Ordenadas pelo vencimento, do mais próximo ao mais distante.</p></div><div className="flex items-center gap-2"><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="abertas">A pagar (pendentes e aprovadas)</SelectItem><SelectItem value="todas">Todas</SelectItem>{Object.entries(statusLabel).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent></Select></div></div>
       <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1180px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Vencimento</th><th className="px-3">Descrição</th><th className="px-3">Centro / Obra</th><th className="px-3">Nº NF</th><th className="px-3">Pagamento</th><th className="px-3 text-right">Valor</th><th className="px-3">Status</th><th className="px-3">NF</th><th className="px-3 text-right">Ações</th></tr></thead><tbody>
-        {shown.map(c => <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}{c.justificativa ? ` · Sem NF: ${c.justificativa}` : ""}</span></td><td className="max-w-[200px] px-3 text-xs">{centerOf(c)}</td><td className="px-3 font-mono text-xs">{c.numero_documento ?? "—"}</td><td className="px-3 font-mono">{c.data_pagamento ? dateBR(c.data_pagamento) : "—"}</td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td><td className="px-3"><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td className="px-3">{c.anexo_path ? <div className="flex gap-1"><Button size="icon" variant="ghost" aria-label="Visualizar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path))}><Eye /></Button><Button size="icon" variant="ghost" aria-label="Baixar NF" onClick={() => openNf(c.anexo_path, fileName(c.anexo_path), true)}><Download /></Button></div> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="px-3 text-right"><div className="flex justify-end gap-1">
+        {shown.map(c => <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}{c.justificativa ? ` · Sem NF: ${c.justificativa}` : ""}</span></td><td className="max-w-[200px] px-3 text-xs">{centerOf(c)}</td><td className="px-3 font-mono text-xs">{c.numero_documento ?? "—"}</td><td className="px-3 font-mono">{c.data_pagamento ? dateBR(c.data_pagamento) : "—"}</td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td><td className="px-3"><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusTone[c.status]}`}>{statusLabel[c.status]}</span></td><td className="px-3">{filesOf(c).length ? <div className="flex flex-wrap gap-1">{filesOf(c).map((p, i) => <span key={p} className="flex"><Button size="icon" variant="ghost" aria-label={`Visualizar anexo ${i + 1}`} onClick={() => openNf(p, fileName(p))}><Eye /></Button><Button size="icon" variant="ghost" aria-label={`Baixar anexo ${i + 1}`} onClick={() => openNf(p, fileName(p), true)}><Download /></Button></span>)}</div> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="px-3 text-right"><div className="flex justify-end gap-1">
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Aprovar" onClick={() => approve.mutate(c.id)}><CheckCircle2 /></Button>}
           {isAdmin && c.status === "pendente" && <Button size="sm" variant="ghost" aria-label="Rejeitar" onClick={() => reject.mutate(c)}><XCircle /></Button>}
           {isAdmin && c.status === "aprovada" && <Button size="sm" onClick={() => markPaid.mutate(c)}>Marcar como paga</Button>}
