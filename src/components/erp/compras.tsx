@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Download, Eye, Paperclip, Plus, XCircle } from "lucide-react";
+import { CheckCircle2, Download, Eye, Paperclip, Plus, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, dateBR } from "@/lib/erp";
@@ -97,6 +97,15 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
     onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível cancelar."),
   });
 
+  const removeOwn = useMutation({
+    mutationFn: async (c: { id: string; anexo_path?: string | null }) => {
+      const { error } = await supabase.from("compras").delete().eq("id", c.id).eq("status", "pendente");
+      if (error) throw error;
+      if (c.anexo_path) await supabase.storage.from("compras").remove([c.anexo_path]);
+    },
+    onSuccess: () => { toast.success("Compra excluída."); qc.invalidateQueries({ queryKey: ["compras"] }); },
+    onError: e => toast.error(e instanceof Error ? e.message : "Não foi possível excluir."),
+  });
   const openNf = async (path: string, name: string, download = false) => {
     try {
     const lower = path.toLowerCase();
@@ -135,14 +144,14 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
       </form>
     </section>}
 
-    {listOnly && <section>
-      <h2 className="font-display text-xl font-bold">Compras registradas</h2>
-      <p className="text-xs text-muted-foreground">Compras e pagamentos pendentes ou aprovados, aguardando pagamento.</p>
-      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[640px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Vencimento</th><th className="px-3">Fornecedor / descrição</th><th className="px-3">Status</th><th className="px-3 text-right">Valor</th></tr></thead><tbody>
-        {data.compras.filter(c => c.status === "pendente" || c.status === "aprovada").sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))).slice(0, 20).map(c => <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}</span></td><td className="px-3"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase">{String(c.status).replaceAll("_", " ")}</span></td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td></tr>)}
-        {!data.compras.some(c => c.status === "pendente" || c.status === "aprovada") && <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Nenhuma compra pendente ou aprovada.</td></tr>}
+    {listOnly && (() => { const pending = data.compras.filter(c => c.status === "pendente" || c.status === "aprovada").sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))).slice(0, 50); return <section>
+      <h2 className="font-display text-xl font-bold">Pagamentos pendentes</h2>
+      <p className="text-xs text-muted-foreground">Compras, pagamentos e reembolsos de caixa pendentes ou aprovados, aguardando pagamento.</p>
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[720px] text-sm"><thead className="border-y bg-muted/50 text-left text-[11px] uppercase text-muted-foreground"><tr><th className="px-3 py-3">Vencimento</th><th className="px-3">Fornecedor / descrição</th><th className="px-3">Tipo</th><th className="px-3">Status</th><th className="px-3 text-right">Valor</th><th className="w-12 px-3"></th></tr></thead><tbody>
+        {pending.map(c => { const mine = isAdmin || c.created_by === data.user?.id; const canDelete = c.origem !== "comprovante" && c.status === "pendente" && mine && (canCreate); return <tr key={c.id} className="border-b"><td className="px-3 py-3 font-mono">{dateBR(c.vencimento)}</td><td className="max-w-xs px-3"><span className="block truncate font-medium">{c.fornecedor}</span><span className="block truncate text-xs text-muted-foreground">{c.descricao}</span></td><td className="px-3 text-xs">{c.origem === "comprovante" ? "Reembolso de caixa" : "Compra"}</td><td className="px-3"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase">{String(c.status).replaceAll("_", " ")}</span></td><td className="px-3 text-right font-mono font-semibold">{brl.format(c.valor)}</td><td className="px-3 text-right">{canDelete && <Button size="icon" variant="ghost" aria-label="Excluir compra" onClick={() => void askConfirm({ title: "Excluir compra", description: "A compra e o anexo serão removidos. Depois você pode lançar novamente com os dados corretos.", details: [{ label: "Fornecedor", value: c.fornecedor }, { label: "Valor", value: brl.format(c.valor) }], confirmLabel: "Excluir", destructive: true }).then(ok => ok && removeOwn.mutate(c))}><Trash2 /></Button>}</td></tr>; })}
+        {pending.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum pagamento pendente.</td></tr>}
       </tbody></table></div>
-    </section>}
+    </section>; })()}
 
     {!formOnly && !listOnly && (() => { const reembolsar = data.compras.filter(c => c.origem === "comprovante" && (c.status === "pendente" || c.status === "aprovada")).reduce((s, c) => s + c.valor, 0); return reembolsar > 0 && <section className="border-t-2 border-warning bg-warning/5 p-5"><p className="text-xs font-bold uppercase text-warning">Reembolso a funcionários</p><p className="mt-1 text-sm text-muted-foreground">Soma dos caixas (comprovantes) já distribuídos e ainda não pagos ao funcionário.</p><p className="mt-2 font-mono text-2xl font-bold">{brl.format(reembolsar)}</p></section>; })()}
 
