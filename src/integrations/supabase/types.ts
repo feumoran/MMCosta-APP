@@ -891,6 +891,7 @@ export type Database = {
           hash_arquivo: string | null
           id: string
           obra_id: string
+          pasta: string
           tamanho_bytes: number
           updated_at: string
         }
@@ -904,6 +905,7 @@ export type Database = {
           hash_arquivo?: string | null
           id?: string
           obra_id: string
+          pasta?: string
           tamanho_bytes: number
           updated_at?: string
         }
@@ -917,6 +919,7 @@ export type Database = {
           hash_arquivo?: string | null
           id?: string
           obra_id?: string
+          pasta?: string
           tamanho_bytes?: number
           updated_at?: string
         }
