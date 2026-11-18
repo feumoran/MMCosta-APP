@@ -725,6 +725,7 @@ export type Database = {
       compras: {
         Row: {
           anexo_path: string | null
+          anexos_extras: string[]
           aprovada_em: string | null
           aprovada_por: string | null
           categoria: string
@@ -745,12 +746,14 @@ export type Database = {
           observacoes: string | null
           origem: string
           status: Database["public"]["Enums"]["compra_status"]
+          tipo_pagamento: string | null
           updated_at: string
           valor: number
           vencimento: string
         }
         Insert: {
           anexo_path?: string | null
+          anexos_extras?: string[]
           aprovada_em?: string | null
           aprovada_por?: string | null
           categoria: string
@@ -771,12 +774,14 @@ export type Database = {
           observacoes?: string | null
           origem?: string
           status?: Database["public"]["Enums"]["compra_status"]
+          tipo_pagamento?: string | null
           updated_at?: string
           valor: number
           vencimento: string
         }
         Update: {
           anexo_path?: string | null
+          anexos_extras?: string[]
           aprovada_em?: string | null
           aprovada_por?: string | null
           categoria?: string
@@ -797,6 +802,7 @@ export type Database = {
           observacoes?: string | null
           origem?: string
           status?: Database["public"]["Enums"]["compra_status"]
+          tipo_pagamento?: string | null
           updated_at?: string
           valor?: number
           vencimento?: string

@@ -64,6 +64,13 @@
       "when": 1795100000000,
       "tag": "0008_compras_pagamento_anexos_exclusao",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795100000001,
+      "tag": "0009_compras_tipo_pagamento_anexos_delete",
+      "breakpoints": true
     }
   ]
 }
