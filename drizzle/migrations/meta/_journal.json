@@ -57,6 +57,13 @@
       "when": 1795023208230,
       "tag": "0007_documentos_pasta",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795100000000,
+      "tag": "0008_compras_pagamento_anexos_exclusao",
+      "breakpoints": true
     }
   ]
 }
