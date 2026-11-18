@@ -138,7 +138,6 @@ export function Purchases({ formOnly = false, listOnly = false }: { formOnly?: b
         <Input inputMode="decimal" placeholder="Valor (R$)" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} required />
         <label className="space-y-1 text-xs text-muted-foreground">Data de vencimento<Input type="date" className="font-mono" value={form.vencimento} onChange={e => setForm({ ...form, vencimento: e.target.value })} required /></label>
         <Input placeholder="Nº da NF / cupom" value={form.numero_documento} onChange={e => setForm({ ...form, numero_documento: e.target.value })} />
-        <div className="flex items-center gap-2 md:col-span-2 xl:col-span-2">
         <div className="flex flex-wrap items-center gap-2 md:col-span-2 xl:col-span-2">
           <input ref={nfInput} type="file" multiple accept=".pdf,image/*" className="hidden" onChange={e => { const picked = Array.from(e.target.files ?? []); setNfs(prev => [...prev, ...picked]); e.target.value = ""; }} />
           <Button type="button" variant="outline" onClick={() => nfInput.current?.click()}><Paperclip />{nfs.length ? "Adicionar outro anexo" : "Anexar NF ou cupom fiscal"}</Button>

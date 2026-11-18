@@ -57,3 +57,6 @@
 - [x] Adicionar consultas MCP de obras e medições respeitando permissões
 - [x] Adicionar leitura e abertura de obras no navegador; extrair catálogo e validar bloqueio anônimo e retorno ao login
 - [ ] Confirmar consentimento completo e consultas com conta real — aguarda login do usuário no preview e republicação
+
+## Pendente
+- [ ] "arrume isso" (Fernando, 18/11 17:34) — sem detalhes; logs de erro e compilação estão limpos. Aguardando o usuário dizer qual tela/problema.
